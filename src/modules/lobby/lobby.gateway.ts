@@ -5,14 +5,14 @@ import {
   WebSocketServer,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  ConnectedSocket,
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Socket, Server } from 'socket.io';
-import { v4 as uuidv4 } from 'uuid';
 
-import { IProfile, ILobby, IUser, IArea } from './interfaces/app';
+import { LobbyService } from './lobby.service';
 
-@WebSocketGateway()
+@WebSocketGateway({ cors: true })
 export class LobbyGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
@@ -21,117 +21,112 @@ export class LobbyGateway
 
   private logger: Logger = new Logger('LobbyGateway');
 
-  lobbyState: ILobby = {
-    users: [],
-    messages: [],
-    areas: [],
-  };
+  constructor(private lobby: LobbyService) {}
 
-  // Добавление и отправка нового сообщения
-  @SubscribeMessage('SEND_MESSAGE')
-  handleMessage(client: Socket, text: string): void {
-    const author = this.lobbyState.users.find((user) => user.id === client.id);
-    const messageId = uuidv4();
-    const message = {
-      id: messageId,
-      authorId: author.id,
-      author: author.nickname,
-      text,
-    };
-    this.lobbyState.messages.push(message);
-    this.server.emit('GET_MESSAGE', message);
-  }
-
-  // Создание и отправка комнаты
-  @SubscribeMessage('CREATE_AREA')
-  createRoom(client: Socket, name: string): void {
-    const author = this.lobbyState.users.find((user) => user.id === client.id);
-    const areaId = uuidv4();
-    const newArea: IArea = {
-      id: areaId,
-      authorId: author.id,
-      name,
-      size: 8,
-      currentSize: 1,
-      users: [author],
-    };
-    this.lobbyState.areas.push(newArea);
-    this.server.emit('AREA_CREATED', newArea);
-    client.join(newArea.id);
-    client.emit('GET_AREA', newArea);
-  }
-
-  @SubscribeMessage('JOIN_AREA')
-  joinArea(client: Socket, areaId: string): void {
-    const user = this.lobbyState.users.find((user) => user.id === client.id);
-    const area = this.lobbyState.areas.find((area) => area.id === areaId);
-    area.users.push(user);
-    area.currentSize++;
-    client.join(area.id);
-    client.emit('GET_AREA', area);
-    client.broadcast.to(area.id).emit('IN_AREA_UPDATED', area);
-    this.server.emit('AREA_UPDATED', area);
-  }
-
-  @SubscribeMessage('LEAVE_AREA')
-  leaveArea(client: Socket, areaId: string): void {
-    const userIndex = this.lobbyState.users.findIndex(
-      (user) => user.id === client.id,
-    );
-    const area = this.lobbyState.areas.find((area) => area.id === areaId);
-    area.users.splice(userIndex, 1);
-    area.currentSize--;
-    client.leave(area.id);
-
-    client.broadcast.to(area.id).emit('IN_AREA_UPDATED', area);
-    this.server.emit('AREA_UPDATED', area);
-  }
-  // Запуск сервера
-  afterInit(server: Server) {
+  async afterInit() {
     this.logger.log('Init');
-  }
-
-  // Отключение одного из сокетов
-  handleDisconnect(client: Socket) {
-    this.logger.log(`Client disconnected: ${client.id}`);
-    const userIndex = this.lobbyState.users.findIndex(
-      (user) => user.id === client.id,
-    );
-
-    // Отправка отключённого клиента ВСЕМ
-    client.broadcast.emit(
-      `USER_DISCONNECTED`,
-      this.lobbyState.users[userIndex].id,
-    );
-
-    // Удаление отключенного клиента
-    this.lobbyState.users.splice(userIndex, 1);
+    this.lobby.initUsers();
   }
 
   // Подключение нового сокета
-  handleConnection(client: Socket, ...args: any[]) {
+  handleConnection(@ConnectedSocket() client: Socket) {
     this.logger.log(`Client connected: ${client.id}`);
+  }
 
-    // Создание нового клиента
-    const newUserId = client.id;
-    const newUser: IUser = {
-      id: newUserId,
-      nickname: `babyBoy-${newUserId[0] + newUserId[1] + newUserId[2]}`,
-      status: 'Online',
-    };
-    const newProfile: IProfile = {
-      ...newUser,
-      friends: [],
-      inArea: false,
-    };
+  // Подключение пользователя к лобби
+  @SubscribeMessage('set_online')
+  setOnline(client: Socket, userId: number) {
+    const user = this.lobby.setUserOnline(userId, client.id);
 
-    // Добавляем нового клиента
-    this.lobbyState.users.push(newUser);
+    // Отправка лобби ОТПРАВИТЕЛЮ
+    client.emit(`get_lobby`, this.lobby.state);
 
     // Отправка нового клиента ВСЕМ, кроме ОТПРАВИТЕЛЯ
-    client.broadcast.emit(`USER_CONNECTED`, newUser);
+    client.broadcast.emit(`user_connected`, user);
+  }
 
-    // Отправка профиля и данных сервера ОТПРАВИТЕЛЮ
-    client.emit(`GET_PROFILE`, newProfile, this.lobbyState);
+  // Отключение сокета
+  handleDisconnect(@ConnectedSocket() client: Socket) {
+    this.logger.log(`Client disconnected: ${client.id}`);
+
+    // Удаление клиента из списка лобби
+    const disconnectedUser = this.lobby.setUserOffline(client.id);
+
+    // Отправка отключённого клиента ВСЕМ, кроме отправителя
+    if (disconnectedUser) {
+      client.broadcast.emit('user_disconnected', disconnectedUser);
+    }
+  }
+
+  // Добавление и отправка нового сообщения в лобби
+  @SubscribeMessage('send_message_lobby')
+  handleMessageLobby(client: Socket, text: string): void {
+    const message = this.lobby.createMessage(client.id, text);
+    this.server.emit('get_message_lobby', message);
+  }
+
+  // Создание и отправка комнаты
+  @SubscribeMessage('create_room')
+  createRoom(client: Socket, name: string): void {
+    const room = this.lobby.createRoom(client.id, name);
+
+    // Отправляем комнату ВСЕМ
+    this.server.emit('room_created', room);
+
+    // Подключаем ОТПРАВИТЕЛЯ к комнате
+    client.join(room.id);
+
+    // Отправляем комнату ОТПРАВИТЕЛЮ
+    client.emit('get_room', room);
+  }
+
+  @SubscribeMessage('join_room')
+  joinRoom(client: Socket, areaId: string): void {
+    const room = this.lobby.joinRoom(client.id, areaId);
+
+    // Подключаем ОТПРАВИТЕЛЯ к комнате
+    client.join(room.id);
+
+    // Отправляем комнату ОТПРАВИТЕЛЮ
+    client.emit('get_room', room);
+
+    // Отправляем комнату ВСЕМ кроме ОТПРАВИТЕЛЯ в комнату
+    client.broadcast.to(room.id).emit('in_room_update', room);
+
+    // Отправляем комнату ВСЕМ
+    this.server.emit('room_updated', room);
+  }
+
+  @SubscribeMessage('leave_room')
+  leaveRoom(client: Socket, roomId: string): void {
+    const room = this.lobby.leaveRoom(client.id, roomId);
+
+    // Отключаем ОТПРАВИТЕЛЯ от комнаты
+    client.leave(room.id);
+
+    // Отправляем комнату ВСЕМ кроме ОТПРАВИТЕЛЯ в комнату
+    client.broadcast.to(room.id).emit('in_room_update', room);
+
+    // Отправляем комнату ВСЕМ
+    this.server.emit('room_updated', room);
+  }
+  @SubscribeMessage('send_message_room')
+  sendMessageToRoom(
+    client: Socket,
+    data: { roomId: string; text: string },
+  ): void {
+    const { message, roomId } = this.lobby.createMessageInRoom(
+      client.id,
+      data.roomId,
+      data.text,
+    );
+
+    this.server.to(roomId).emit('get_message_room', message);
+  }
+
+  @SubscribeMessage('check_auth')
+  checkAuth(client: Socket, token: string) {
+    console.log('check_auth', token);
+    client.emit('get_profile', '123');
   }
 }

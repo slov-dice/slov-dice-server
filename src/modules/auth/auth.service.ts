@@ -2,11 +2,12 @@ import { ForbiddenException } from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import * as bcrypt from 'bcrypt';
+import * as argon2 from 'argon2';
 
-import { AuthDto } from './dto';
+import { AuthDto } from './dto/auth.dto';
 import { Tokens, SignInRes } from './types';
 import { PrismaService } from 'modules/prisma/prisma.service';
+import { LobbyService } from 'modules/lobby/lobby.service';
 
 @Injectable()
 export class AuthService {
@@ -14,35 +15,39 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private config: ConfigService,
+    private lobby: LobbyService,
   ) {}
 
   async signUpLocal(dto: AuthDto): Promise<Tokens> {
     const hash = await this.hashData(dto.password);
     const newUser = await this.prisma.user.create({
       data: {
-        email: dto.email,
+        nickname: dto.nickname,
         hash,
       },
     });
 
-    const tokens = await this.getTokens(newUser.id, newUser.email);
+    const tokens = await this.getTokens(newUser.id, newUser.nickname);
     await this.updateRtHash(newUser.id, tokens.refresh_token);
     return tokens;
   }
 
   async signInLocal(dto: AuthDto): Promise<SignInRes> {
     const user = await this.prisma.user.findUnique({
-      where: { email: dto.email },
+      where: { nickname: dto.nickname },
     });
 
     if (!user) throw new ForbiddenException('Access Denied');
 
-    const passwordMatches = await bcrypt.compare(dto.password, user.hash);
+    const passwordMatches = await argon2.verify(user.hash, dto.password);
     if (!passwordMatches) throw new ForbiddenException('Access Denied');
 
-    const tokens = await this.getTokens(user.id, user.email);
+    const tokens = await this.getTokens(user.id, user.nickname);
     await this.updateRtHash(user.id, tokens.refresh_token);
-    return { profile: { id: user.id, email: user.email }, tokens };
+    return {
+      profile: { id: user.id, nickname: user.nickname },
+      tokens,
+    };
   }
 
   async logout(userId: number) {
@@ -67,10 +72,10 @@ export class AuthService {
 
     if (!user || !user.hashedRt) throw new ForbiddenException('Access Denied');
 
-    const rtMatches = await bcrypt.compare(rt, user.hashedRt);
+    const rtMatches = await argon2.verify(user.hashedRt, rt);
     if (!rtMatches) throw new ForbiddenException('Access Denied');
 
-    const tokens = await this.getTokens(user.id, user.email);
+    const tokens = await this.getTokens(user.id, user.nickname);
     await this.updateRtHash(user.id, tokens.refresh_token);
     return tokens;
   }
@@ -88,15 +93,15 @@ export class AuthService {
   }
 
   hashData(data: string) {
-    return bcrypt.hash(data, 10);
+    return argon2.hash(data);
   }
 
-  async getTokens(userId: number, email: string): Promise<Tokens> {
+  async getTokens(userId: number, nickname: string): Promise<Tokens> {
     const [at, rt] = await Promise.all([
       this.jwtService.signAsync(
         {
           sub: userId,
-          email,
+          nickname,
         },
         {
           secret: this.config.get<string>('JWT_SECRET_AT'),
@@ -106,7 +111,7 @@ export class AuthService {
       this.jwtService.signAsync(
         {
           sub: userId,
-          email,
+          nickname,
         },
         {
           secret: this.config.get<string>('JWT_SECRET_RT'),
