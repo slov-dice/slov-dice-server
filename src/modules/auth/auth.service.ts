@@ -2,6 +2,7 @@ import { ForbiddenException } from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { Response, Request } from 'express';
 import * as argon2 from 'argon2';
 
 import { AuthDto } from './dto/auth.dto';
@@ -32,7 +33,7 @@ export class AuthService {
     return tokens;
   }
 
-  async signInLocal(dto: AuthDto): Promise<SignInRes> {
+  async signInLocal(dto: AuthDto, response: Response): Promise<SignInRes> {
     const user = await this.prisma.user.findUnique({
       where: { nickname: dto.nickname },
     });
@@ -44,13 +45,34 @@ export class AuthService {
 
     const tokens = await this.getTokens(user.id, user.nickname);
     await this.updateRtHash(user.id, tokens.refresh_token);
+
+    response.cookie('access_token', tokens.access_token, {
+      httpOnly: false,
+      // secure: !development,
+      // domain: this.config.get<string>('CLIENT_SERVER'),
+      // 30 * 24 * 60 * 60 * 1000
+      maxAge: 15 * 60 * 1000,
+    });
+    response.cookie('refresh_token', tokens.refresh_token, {
+      httpOnly: true,
+      // secure: !true,
+      // domain: this.config.get<string>('CLIENT_SERVER'),
+      // 30 * 24 * 60 * 60 * 1000
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     return {
       profile: { id: user.id, nickname: user.nickname },
       tokens,
     };
   }
 
-  async logout(userId: number) {
+  async logout(userId: number, response: Response, request: Request) {
+    console.log(userId);
+    // const { refresh_token } = request.cookies;
+    response.clearCookie('access_token');
+    response.clearCookie('refresh_token');
+    // TODO: Обновлять по refresh_token из куки, избавиться от userId. Нужно избавиться от хэширования токенов?
     await this.prisma.user.updateMany({
       where: {
         id: userId,

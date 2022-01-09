@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
+import * as argon2 from 'argon2';
 
 import { PrismaService } from 'modules/prisma/prisma.service';
-import type { ILobby, IUser, IMessage, IRoom } from 'interfaces/app';
+import type { ILobby, IUser, IMessage, IRoom, IProfile } from 'interfaces/app';
 
 @Injectable()
 export class LobbyService {

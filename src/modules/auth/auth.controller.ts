@@ -4,8 +4,11 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+import { Response, Request } from 'express';
 
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto/auth.dto';
@@ -27,8 +30,11 @@ export class AuthController {
   @Public()
   @Post('local/signin')
   @HttpCode(HttpStatus.OK)
-  signInLocal(@Body() dto: AuthDto): Promise<SignInRes> {
-    return this.authService.signInLocal(dto);
+  signInLocal(
+    @Body() dto: AuthDto,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<SignInRes> {
+    return this.authService.signInLocal(dto, response);
   }
 
   // @Public()
@@ -36,8 +42,12 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  logout(@GetCurrentUserId() userId: number) {
-    return this.authService.logout(userId);
+  logout(
+    @GetCurrentUserId() userId: number,
+    @Res({ passthrough: true }) response: Response,
+    @Req() request: Request,
+  ) {
+    return this.authService.logout(userId, response, request);
   }
 
   @Public()

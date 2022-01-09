@@ -123,10 +123,4 @@ export class LobbyGateway
 
     this.server.to(roomId).emit('get_message_room', message);
   }
-
-  @SubscribeMessage('check_auth')
-  checkAuth(client: Socket, token: string) {
-    console.log('check_auth', token);
-    client.emit('get_profile', '123');
-  }
 }
