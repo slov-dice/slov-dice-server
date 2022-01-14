@@ -1,15 +1,18 @@
-import { ForbiddenException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  UnauthorizedException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Response, Request } from 'express';
 import * as argon2 from 'argon2';
 
-import { AuthDto } from './dto/auth.dto';
-import { Tokens, SignInRes } from './types';
+import { SignUpDto, SignInDto } from './dto/auth.dto';
+import { AuthRes, Tokens } from './types/response.type';
 import { PrismaService } from 'modules/prisma/prisma.service';
 import { LobbyService } from 'modules/lobby/lobby.service';
-
 @Injectable()
 export class AuthService {
   constructor(
@@ -19,97 +22,124 @@ export class AuthService {
     private lobby: LobbyService,
   ) {}
 
-  async signUpLocal(dto: AuthDto): Promise<Tokens> {
-    const hash = await this.hashData(dto.password);
-    const newUser = await this.prisma.user.create({
+  async signUpLocal(dto: SignUpDto, response: Response): Promise<AuthRes> {
+    const userExists = await this.prisma.user.findFirst({
+      where: { OR: [{ email: dto.email }, { nickname: dto.nickname }] },
+    });
+    if (userExists) throw new ForbiddenException('User already exists!');
+
+    const hashedPassword = await this.hashData(dto.password);
+    const user = await this.prisma.user.create({
       data: {
         nickname: dto.nickname,
-        hash,
+        email: dto.email,
+        hash: hashedPassword,
       },
     });
 
-    const tokens = await this.getTokens(newUser.id, newUser.nickname);
-    await this.updateRtHash(newUser.id, tokens.refresh_token);
-    return tokens;
+    const tokens = await this.generateTokens(user.id);
+    this.setCookies(tokens.access_token, tokens.refresh_token, response);
+
+    await this.updateRt(user.id, tokens.refresh_token);
+
+    // Добавляем юзера в лобби
+    this.lobby.setRegisteredUser(user, dto.socketId);
+
+    return { id: user.id, nickname: user.nickname, email: user.email };
   }
 
-  async signInLocal(dto: AuthDto, response: Response): Promise<SignInRes> {
+  async signInLocal(dto: SignInDto, response: Response): Promise<AuthRes> {
     const user = await this.prisma.user.findUnique({
       where: { nickname: dto.nickname },
     });
 
-    if (!user) throw new ForbiddenException('Access Denied');
+    // Если пользователь не найден
+    if (!user) throw new ForbiddenException('User not found');
 
     const passwordMatches = await argon2.verify(user.hash, dto.password);
+
+    // Если пароли не совпадают
     if (!passwordMatches) throw new ForbiddenException('Access Denied');
 
-    const tokens = await this.getTokens(user.id, user.nickname);
-    await this.updateRtHash(user.id, tokens.refresh_token);
+    const tokens = await this.generateTokens(user.id);
+    this.setCookies(tokens.access_token, tokens.refresh_token, response);
 
-    response.cookie('access_token', tokens.access_token, {
-      httpOnly: false,
-      // secure: !development,
-      // domain: this.config.get<string>('CLIENT_SERVER'),
-      // 30 * 24 * 60 * 60 * 1000
-      maxAge: 15 * 60 * 1000,
-    });
-    response.cookie('refresh_token', tokens.refresh_token, {
-      httpOnly: true,
-      // secure: !true,
-      // domain: this.config.get<string>('CLIENT_SERVER'),
-      // 30 * 24 * 60 * 60 * 1000
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    await this.updateRt(user.id, tokens.refresh_token);
+
+    // Добавляем юзера в лобби
+    this.lobby.setUserOnline(user.id, dto.socketId);
 
     return {
-      profile: { id: user.id, nickname: user.nickname },
-      tokens,
+      id: user.id,
+      nickname: user.nickname,
+      email: user.email,
     };
   }
 
-  async logout(userId: number, response: Response, request: Request) {
-    console.log(userId);
-    // const { refresh_token } = request.cookies;
+  async logout(userId: number, response: Response) {
     response.clearCookie('access_token');
     response.clearCookie('refresh_token');
-    // TODO: Обновлять по refresh_token из куки, избавиться от userId. Нужно избавиться от хэширования токенов?
     await this.prisma.user.updateMany({
       where: {
         id: userId,
-        hashedRt: {
+        refresh_token: {
           not: null,
         },
       },
       data: {
-        hashedRt: null,
+        refresh_token: null,
       },
     });
   }
-  async refreshTokens(userId: number, rt: string) {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        id: userId,
-      },
-    });
+  async refreshTokens(req: Request, res: Response) {
+    try {
+      const { refresh_token } = req.cookies;
+      if (!refresh_token) {
+        console.log('нету рефреша в куки');
+        throw new UnauthorizedException('Unauthorized!');
+      }
+      const userData = this.jwtService.verify(refresh_token, {
+        secret: this.config.get<string>('JWT_SECRET_RT'),
+      });
+      const tokenFromDb = await this.prisma.user.findFirst({
+        where: {
+          refresh_token: refresh_token,
+        },
+      });
+      if (!userData || !tokenFromDb) {
+        console.log('!userData || !tokenFromDb');
+        throw new UnauthorizedException('Unauthorized!');
+      }
+      const user = await this.prisma.user.findUnique({
+        where: {
+          id: userData.sub,
+        },
+      });
+      const tokens = await this.generateTokens(user.id);
 
-    if (!user || !user.hashedRt) throw new ForbiddenException('Access Denied');
-
-    const rtMatches = await argon2.verify(user.hashedRt, rt);
-    if (!rtMatches) throw new ForbiddenException('Access Denied');
-
-    const tokens = await this.getTokens(user.id, user.nickname);
-    await this.updateRtHash(user.id, tokens.refresh_token);
-    return tokens;
+      // Update the refresh token
+      await this.prisma.user.update({
+        where: {
+          id: userData.sub,
+        },
+        data: {
+          refresh_token: tokens.refresh_token,
+        },
+      });
+      this.setCookies(tokens.access_token, tokens.refresh_token, res);
+      return tokens;
+    } catch {
+      throw new NotFoundException('Refresh token expired');
+    }
   }
 
-  async updateRtHash(userId: number, rt: string) {
-    const hash = await this.hashData(rt);
+  async updateRt(userId: number, rt: string) {
     await this.prisma.user.update({
       where: {
         id: userId,
       },
       data: {
-        hashedRt: hash,
+        refresh_token: rt,
       },
     });
   }
@@ -118,22 +148,31 @@ export class AuthService {
     return argon2.hash(data);
   }
 
-  async getTokens(userId: number, nickname: string): Promise<Tokens> {
+  setCookies(at: string, rt: string, response: Response) {
+    response.cookie('access_token', at, {
+      httpOnly: false,
+      maxAge: 60_000 * 15, // 15 минут
+    });
+    response.cookie('refresh_token', rt, {
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // неделя
+    });
+  }
+
+  async generateTokens(userId: number): Promise<Tokens> {
     const [at, rt] = await Promise.all([
       this.jwtService.signAsync(
         {
           sub: userId,
-          nickname,
         },
         {
           secret: this.config.get<string>('JWT_SECRET_AT'),
-          expiresIn: 60 * 15, // 15 минут
+          expiresIn: 15 * 60, // 15 минут
         },
       ),
       this.jwtService.signAsync(
         {
           sub: userId,
-          nickname,
         },
         {
           secret: this.config.get<string>('JWT_SECRET_RT'),

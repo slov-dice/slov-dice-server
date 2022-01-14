@@ -5,5 +5,6 @@ import { LobbyService } from './lobby.service';
 
 @Module({
   providers: [LobbyGateway, LobbyService],
+  exports: [LobbyService],
 })
 export class LobbyModule {}

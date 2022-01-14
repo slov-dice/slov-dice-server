@@ -35,8 +35,8 @@ export class LobbyGateway
 
   // Подключение пользователя к лобби
   @SubscribeMessage('set_online')
-  setOnline(client: Socket, userId: number) {
-    const user = this.lobby.setUserOnline(userId, client.id);
+  setOnline(client: Socket) {
+    const user = this.lobby.findOneUserBySocketId(client.id);
 
     // Отправка лобби ОТПРАВИТЕЛЮ
     client.emit(`get_lobby`, this.lobby.state);

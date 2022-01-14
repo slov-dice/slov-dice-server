@@ -1,9 +1,10 @@
-import type { Tokens } from './tokens.type';
+export type Tokens = {
+  access_token: string;
+  refresh_token: string;
+};
 
-export type SignInRes = {
-  profile: {
-    id: number;
-    nickname: string;
-  };
-  tokens: Tokens;
+export type AuthRes = {
+  id: number;
+  nickname: string;
+  email: string;
 };
