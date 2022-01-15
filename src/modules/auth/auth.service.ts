@@ -43,7 +43,7 @@ export class AuthService {
     await this.updateRt(user.id, tokens.refresh_token);
 
     // Добавляем юзера в лобби
-    this.lobby.setRegisteredUser(user, dto.socketId);
+    this.lobby.addRegisteredUser(user, dto.socketId);
 
     return { id: user.id, nickname: user.nickname, email: user.email };
   }
@@ -65,9 +65,6 @@ export class AuthService {
     this.setCookies(tokens.access_token, tokens.refresh_token, response);
 
     await this.updateRt(user.id, tokens.refresh_token);
-
-    // Добавляем юзера в лобби
-    this.lobby.setUserOnline(user.id, dto.socketId);
 
     return {
       id: user.id,
@@ -91,9 +88,9 @@ export class AuthService {
       },
     });
   }
-  async refreshTokens(req: Request, res: Response) {
+  async refreshTokens(refresh_token: string, res: Response) {
     try {
-      const { refresh_token } = req.cookies;
+      console.log(refresh_token);
       if (!refresh_token) {
         console.log('нету рефреша в куки');
         throw new UnauthorizedException('Unauthorized!');

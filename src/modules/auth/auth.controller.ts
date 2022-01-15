@@ -14,7 +14,8 @@ import { AuthService } from './auth.service';
 import { SignUpDto, SignInDto } from './dto/auth.dto';
 import { AuthRes } from './types/response.type';
 import { RtGuard } from 'guards';
-import { GetCurrentUser, GetCurrentUserId, Public } from 'decorators';
+import { GetCurrentUserId, Public } from 'decorators';
+import { GetReqRT } from 'decorators/get-req-rt.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -42,6 +43,7 @@ export class AuthController {
 
   // @Public()
   // @Get('discord/')
+
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   logout(
@@ -52,20 +54,12 @@ export class AuthController {
   }
 
   @Public()
-  // @UseGuards(RtGuard)
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   refreshTokens(
-    // @GetCurrentUserId() userId: number,
-    // @GetCurrentUser('refreshToken') refreshToken: string,
-    @Req() request: Request,
+    @GetReqRT() rt: string,
     @Res({ passthrough: true }) response: Response,
   ) {
-    return this.authService.refreshTokens(
-      // userId,
-      // refreshToken,
-      request,
-      response,
-    );
+    return this.authService.refreshTokens(rt, response);
   }
 }
