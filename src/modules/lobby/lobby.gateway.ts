@@ -36,12 +36,13 @@ export class LobbyGateway
   // Подключение пользователя к лобби
   @SubscribeMessage('set_online')
   setOnline(client: Socket, userId: number) {
-    const user = this.lobby.setUserOnline(userId, client.id);
+    this.lobby.setUserOnline(userId, client.id);
 
     // Отправка лобби ОТПРАВИТЕЛЮ
     client.emit(`get_lobby`, this.lobby.state);
 
     // Отправка нового клиента ВСЕМ, кроме ОТПРАВИТЕЛЯ
+    const user = this.lobby.findOneUserBySocketId(client.id);
     client.broadcast.emit(`user_connected`, user);
   }
 
@@ -67,8 +68,9 @@ export class LobbyGateway
 
   // Создание и отправка комнаты
   @SubscribeMessage('create_room')
-  createRoom(client: Socket, name: string): void {
-    const room = this.lobby.createRoom(client.id, name);
+  createRoom(client: Socket, data: [string, number]): void {
+    const [name, size] = data;
+    const room = this.lobby.createRoom(client.id, name, size);
 
     // Отправляем комнату ВСЕМ
     this.server.emit('room_created', room);
@@ -81,8 +83,11 @@ export class LobbyGateway
   }
 
   @SubscribeMessage('join_room')
-  joinRoom(client: Socket, areaId: string): void {
-    const room = this.lobby.joinRoom(client.id, areaId);
+  joinRoom(client: Socket, roomId: string): void {
+    const room = this.lobby.joinRoom(client.id, roomId);
+
+    // Если комната переполнена
+    if (room === false) return;
 
     // Подключаем ОТПРАВИТЕЛЯ к комнате
     client.join(room.id);
@@ -122,11 +127,5 @@ export class LobbyGateway
     );
 
     this.server.to(roomId).emit('get_message_room', message);
-  }
-
-  @SubscribeMessage('check_auth')
-  checkAuth(client: Socket, token: string) {
-    console.log('check_auth', token);
-    client.emit('get_profile', '123');
   }
 }

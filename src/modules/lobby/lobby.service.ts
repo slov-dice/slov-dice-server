@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
+import { User } from '@prisma/client';
 
 import { PrismaService } from 'modules/prisma/prisma.service';
-import type { ILobby, IUser, IMessage, IRoom } from 'interfaces/app';
+import type { ILobby, IUser, IMessage, IRoom, IProfile } from 'interfaces/app';
 
 @Injectable()
 export class LobbyService {
@@ -26,7 +27,18 @@ export class LobbyService {
     this.state.users = usersLobby;
   }
 
-  // Делаем пользователя онлайн, после успешной авторизации
+  // Добавляет зарегистрированного юзера
+  addRegisteredUser(user: User, socketId: string): void {
+    const userLobby: IUser = {
+      id: user.id,
+      nickname: user.nickname,
+      socketId,
+      status: 'offline',
+    };
+    this.state.users.push(userLobby);
+  }
+
+  // Делаем юзера онлайн, после успешной авторизации
   setUserOnline(userId: number, socketId: string): IUser {
     this.state.users = this.state.users.map((user) => {
       return user.id === userId
@@ -69,14 +81,15 @@ export class LobbyService {
   }
 
   // Создание комнаты в лобби
-  createRoom(socketId: string, name: string): IRoom {
+  createRoom(socketId: string, name: string, size: number): IRoom {
+    console.log('size', size);
     const author = this.findOneUserBySocketId(socketId);
     const roomId = uuidv4();
     const room: IRoom = {
       id: roomId,
       authorId: author.id,
       name,
-      size: 8,
+      size,
       currentSize: 1,
       users: [author],
       messages: [],
@@ -93,9 +106,11 @@ export class LobbyService {
   }
 
   // Вход в комнату
-  joinRoom(socketId: string, roomId: string): IRoom {
+  joinRoom(socketId: string, roomId: string): IRoom | false {
     const user = this.findOneUserBySocketId(socketId);
     const room = this.findOneRoomById(roomId);
+
+    if (room.currentSize >= room.size) return false;
 
     room.users.push(user);
     room.currentSize++;
@@ -113,8 +128,14 @@ export class LobbyService {
     const userIndex = room.users.findIndex(
       (item) => item.socketId === socketId,
     );
+
     room.users.splice(userIndex, 1);
     room.currentSize--;
+
+    // Если выходит последний пользователь, то удаляем комнату
+    if (room.currentSize <= 0) {
+      this.state.rooms = this.state.rooms.filter((room) => room.id !== roomId);
+    }
 
     return room;
   }

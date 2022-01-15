@@ -4,14 +4,18 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+import { Response, Request } from 'express';
 
 import { AuthService } from './auth.service';
-import { AuthDto } from './dto/auth.dto';
-import { Tokens, SignInRes } from './types';
+import { SignUpDto, SignInDto } from './dto/auth.dto';
+import { AuthRes } from './types/response.type';
 import { RtGuard } from 'guards';
-import { GetCurrentUser, GetCurrentUserId, Public } from 'decorators';
+import { GetCurrentUserId, Public } from 'decorators';
+import { GetReqRT } from 'decorators/get-req-rt.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -20,15 +24,21 @@ export class AuthController {
   @Public()
   @Post('local/signup')
   @HttpCode(HttpStatus.CREATED)
-  signUpLocal(@Body() dto: AuthDto): Promise<Tokens> {
-    return this.authService.signUpLocal(dto);
+  signUpLocal(
+    @Body() dto: SignUpDto,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<AuthRes> {
+    return this.authService.signUpLocal(dto, response);
   }
 
   @Public()
   @Post('local/signin')
   @HttpCode(HttpStatus.OK)
-  signInLocal(@Body() dto: AuthDto): Promise<SignInRes> {
-    return this.authService.signInLocal(dto);
+  signInLocal(
+    @Body() dto: SignInDto,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<AuthRes> {
+    return this.authService.signInLocal(dto, response);
   }
 
   // @Public()
@@ -36,18 +46,20 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  logout(@GetCurrentUserId() userId: number) {
-    return this.authService.logout(userId);
+  logout(
+    @GetCurrentUserId() userId: number,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    return this.authService.logout(userId, response);
   }
 
   @Public()
-  @UseGuards(RtGuard)
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   refreshTokens(
-    @GetCurrentUserId() userId: number,
-    @GetCurrentUser('refreshToken') refreshToken: string,
+    @GetReqRT() rt: string,
+    @Res({ passthrough: true }) response: Response,
   ) {
-    return this.authService.refreshTokens(userId, refreshToken);
+    return this.authService.refreshTokens(rt, response);
   }
 }
