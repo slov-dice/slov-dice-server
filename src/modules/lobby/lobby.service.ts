@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { User } from '@prisma/client';
 
-import { PrismaService } from 'modules/prisma/prisma.service';
-import type { ILobby, IUser, IMessage, IRoom, IProfile } from 'interfaces/app';
+import { UsersService } from 'modules/users/users.service';
+import type { ILobby, LobbyUser, IMessage, IRoom } from 'interfaces/app';
 
 @Injectable()
 export class LobbyService {
@@ -13,12 +13,12 @@ export class LobbyService {
     messages: [],
   };
 
-  constructor(private prisma: PrismaService) {}
+  constructor(private usersService: UsersService) {}
 
   // Записываем пользователей из базы данных на сервер
   async initUsers() {
-    const usersDB = await this.prisma.user.findMany();
-    const usersLobby: IUser[] = usersDB.map((user) => ({
+    const usersDB = await this.usersService.getAll();
+    const usersLobby: LobbyUser[] = usersDB.map((user) => ({
       id: user.id,
       nickname: user.nickname,
       socketId: '',
@@ -29,7 +29,7 @@ export class LobbyService {
 
   // Добавляет зарегистрированного юзера
   addRegisteredUser(user: User, socketId: string): void {
-    const userLobby: IUser = {
+    const userLobby: LobbyUser = {
       id: user.id,
       nickname: user.nickname,
       socketId,
@@ -39,7 +39,7 @@ export class LobbyService {
   }
 
   // Делаем юзера онлайн, после успешной авторизации
-  setUserOnline(userId: number, socketId: string): IUser {
+  setUserOnline(userId: number, socketId: string): LobbyUser {
     this.state.users = this.state.users.map((user) => {
       return user.id === userId
         ? { ...user, status: 'online', socketId }
@@ -49,12 +49,12 @@ export class LobbyService {
   }
 
   // Поиск пользователя по socketId
-  findOneUserBySocketId(socketId: string): IUser {
+  findOneUserBySocketId(socketId: string): LobbyUser {
     return this.state.users.find((user) => user.socketId === socketId);
   }
 
   // Делаем пользователя оффлайн, если сокет потерял соединение и он в лобби
-  setUserOffline(socketId: string): IUser {
+  setUserOffline(socketId: string): LobbyUser {
     this.state.users = this.state.users.map((user) => {
       return user.socketId === socketId
         ? { ...user, status: 'offline', socketId: '' }

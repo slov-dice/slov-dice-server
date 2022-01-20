@@ -9,12 +9,12 @@ export interface IProfile {
 }
 
 export interface ILobby {
-  users: IUser[];
+  users: LobbyUser[];
   messages: IMessage[];
   rooms: IRoom[];
 }
 
-export interface IUser {
+export interface LobbyUser {
   socketId: string;
   id: number;
   nickname: string;
@@ -33,6 +33,6 @@ export interface IRoom {
   name: string;
   size: number;
   currentSize: number;
-  users: IUser[];
+  users: LobbyUser[];
   messages: IMessage[];
 }
