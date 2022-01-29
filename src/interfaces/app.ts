@@ -1,3 +1,5 @@
+import { RoomType } from 'modules/lobby/dto/room.dto';
+
 export interface IProfile {
   id: number;
   socketId: string;
@@ -9,12 +11,12 @@ export interface IProfile {
 }
 
 export interface ILobby {
-  users: IUser[];
+  users: LobbyUser[];
   messages: IMessage[];
   rooms: IRoom[];
 }
 
-export interface IUser {
+export interface LobbyUser {
   socketId: string;
   id: number;
   nickname: string;
@@ -32,7 +34,9 @@ export interface IRoom {
   authorId: number;
   name: string;
   size: number;
+  type: RoomType;
+  password: string;
   currentSize: number;
-  users: IUser[];
+  users: LobbyUser[];
   messages: IMessage[];
 }

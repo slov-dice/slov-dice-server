@@ -21,7 +21,7 @@ export class SignUpDto {
 export class SignInDto {
   @IsString()
   @IsNotEmpty()
-  nickname: string;
+  email: string;
 
   @IsString()
   @IsNotEmpty()
@@ -30,4 +30,31 @@ export class SignInDto {
   @IsString()
   @IsNotEmpty()
   socketId: string;
+}
+
+export class ThirdPartyDto {
+  @IsString()
+  @IsNotEmpty()
+  code: string;
+
+  @IsString()
+  @IsNotEmpty()
+  socketId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  authType: AuthType;
+}
+
+export class GuestDto {
+  @IsString()
+  @IsNotEmpty()
+  socketId: string;
+}
+
+export enum AuthType {
+  google = 'GOOGLE',
+  discord = 'DISCORD',
+  email = 'EMAIL',
+  guest = 'GUEST',
 }

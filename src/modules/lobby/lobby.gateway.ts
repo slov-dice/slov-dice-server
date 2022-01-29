@@ -11,6 +11,12 @@ import { Logger } from '@nestjs/common';
 import { Socket, Server } from 'socket.io';
 
 import { LobbyService } from './lobby.service';
+import {
+  CreateRoomDto,
+  JoinRoomDto,
+  RejoinRoomDto,
+  RoomType,
+} from './dto/room.dto';
 
 @WebSocketGateway({ cors: true })
 export class LobbyGateway
@@ -29,7 +35,7 @@ export class LobbyGateway
   }
 
   // Подключение нового сокета
-  handleConnection(@ConnectedSocket() client: Socket) {
+  handleConnection(client: Socket) {
     this.logger.log(`Client connected: ${client.id}`);
   }
 
@@ -47,30 +53,69 @@ export class LobbyGateway
   }
 
   // Отключение сокета
-  handleDisconnect(@ConnectedSocket() client: Socket) {
+  handleDisconnect(client: Socket) {
     this.logger.log(`Client disconnected: ${client.id}`);
 
     // Удаление клиента из списка лобби
     const disconnectedUser = this.lobby.setUserOffline(client.id);
 
-    // Отправка отключённого клиента ВСЕМ, кроме отправителя
+    // Если юзер прошел авторизацию
     if (disconnectedUser) {
+      // Отправка отключённого клиента ВСЕМ, кроме отправителя
       client.broadcast.emit('user_disconnected', disconnectedUser);
+
+      const room = this.lobby.leaveRoomBySocketId(client.id);
+
+      // Если юзер в комнате
+      if (room) {
+        client.leave(room.id);
+
+        // Отправляем комнату ВСЕМ кроме ОТПРАВИТЕЛЯ в комнату
+        client.broadcast.to(room.id).emit('in_room_update', room);
+
+        // Отправляем комнату ВСЕМ
+        this.server.emit('room_updated', room);
+      }
     }
+  }
+
+  // Отключаем пользователя от комнаты и делаем его оффлайн,
+  // если пользователь выходит из профиля
+  @SubscribeMessage('logout_user')
+  logoutUser(client: Socket, roomId: string) {
+    // Исключаем юзера из комнаты, если он в ней
+    if (roomId) {
+      const room = this.lobby.leaveRoom(client.id, roomId);
+
+      // Отключаем ОТПРАВИТЕЛЯ от комнаты
+      client.leave(room.id);
+
+      // Отправляем комнату ВСЕМ кроме ОТПРАВИТЕЛЯ в комнату
+      client.broadcast.to(room.id).emit('in_room_update', room);
+
+      // Отправляем комнату ВСЕМ
+      this.server.emit('room_updated', room);
+    }
+
+    const disconnectedUser = this.lobby.setUserOffline(client.id);
+
+    // Отправка отключённого юзера ВСЕМ, кроме отправителя
+    client.broadcast.emit('user_disconnected', disconnectedUser);
   }
 
   // Добавление и отправка нового сообщения в лобби
   @SubscribeMessage('send_message_lobby')
-  handleMessageLobby(client: Socket, text: string): void {
+  sendMessageLobby(client: Socket, text: string): void {
     const message = this.lobby.createMessage(client.id, text);
     this.server.emit('get_message_lobby', message);
   }
 
   // Создание и отправка комнаты
   @SubscribeMessage('create_room')
-  createRoom(client: Socket, data: [string, number]): void {
-    const [name, size] = data;
-    const room = this.lobby.createRoom(client.id, name, size);
+  createRoom(client: Socket, data: CreateRoomDto): void {
+    const [name, size, password, type] = data;
+
+    const room = this.lobby.createRoom(client.id, name, size, password, type);
 
     // Отправляем комнату ВСЕМ
     this.server.emit('room_created', room);
@@ -83,11 +128,16 @@ export class LobbyGateway
   }
 
   @SubscribeMessage('join_room')
-  joinRoom(client: Socket, roomId: string): void {
-    const room = this.lobby.joinRoom(client.id, roomId);
+  joinRoom(client: Socket, data: JoinRoomDto): void {
+    const [id, password] = data;
 
-    // Если комната переполнена
-    if (room === false) return;
+    const room = this.lobby.joinRoom(client.id, id, password);
+
+    // Если комната переполнена или не совпадает пароль
+    if (room === false) {
+      console.log('ОШИБКА: комната переполнена или пароль не совпадает');
+      return;
+    }
 
     // Подключаем ОТПРАВИТЕЛЯ к комнате
     client.join(room.id);
@@ -102,6 +152,19 @@ export class LobbyGateway
     this.server.emit('room_updated', room);
   }
 
+  // Переподключение к комнате, после перезагрузки страницы
+  @SubscribeMessage('rejoin_room')
+  rejoinRoom(client: Socket, data: RejoinRoomDto): void {
+    const [userId, roomId] = data;
+
+    // Переподключаем юзера в комнату
+    client.join(roomId);
+
+    // Обновляем socketId юзера в комнате
+    this.lobby.rejoinRoom(client.id, userId, roomId);
+  }
+
+  // Ручной выход из комнаты
   @SubscribeMessage('leave_room')
   leaveRoom(client: Socket, roomId: string): void {
     const room = this.lobby.leaveRoom(client.id, roomId);
