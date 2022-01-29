@@ -4,6 +4,7 @@ import { User } from '@prisma/client';
 
 import { UsersService } from 'modules/users/users.service';
 import type { ILobby, LobbyUser, IMessage, IRoom } from 'interfaces/app';
+import { RoomType } from './dto/room.dto';
 
 @Injectable()
 export class LobbyService {
@@ -32,10 +33,15 @@ export class LobbyService {
     const userLobby: LobbyUser = {
       id: user.id,
       nickname: user.nickname,
-      socketId,
+      socketId: '',
       status: 'offline',
     };
     this.state.users.push(userLobby);
+  }
+
+  // Поиск пользователя по socketId
+  findOneUserBySocketId(socketId: string): LobbyUser {
+    return this.state.users.find((user) => user.socketId === socketId);
   }
 
   // Делаем юзера онлайн, после успешной авторизации
@@ -48,20 +54,16 @@ export class LobbyService {
     return this.findOneUserBySocketId(socketId);
   }
 
-  // Поиск пользователя по socketId
-  findOneUserBySocketId(socketId: string): LobbyUser {
-    return this.state.users.find((user) => user.socketId === socketId);
-  }
-
-  // Делаем пользователя оффлайн, если сокет потерял соединение и он в лобби
+  // Делаем пользователя оффлайн, если сокет потерял соединение
   setUserOffline(socketId: string): LobbyUser {
+    const user = this.findOneUserBySocketId(socketId);
     this.state.users = this.state.users.map((user) => {
       return user.socketId === socketId
         ? { ...user, status: 'offline', socketId: '' }
         : user;
     });
 
-    return this.findOneUserBySocketId(socketId);
+    return user;
   }
 
   // Создание сообщения в лобби
@@ -81,8 +83,13 @@ export class LobbyService {
   }
 
   // Создание комнаты в лобби
-  createRoom(socketId: string, name: string, size: number): IRoom {
-    console.log('size', size);
+  createRoom(
+    socketId: string,
+    name: string,
+    size: number,
+    password: string,
+    type: RoomType,
+  ): IRoom {
     const author = this.findOneUserBySocketId(socketId);
     const roomId = uuidv4();
     const room: IRoom = {
@@ -90,6 +97,8 @@ export class LobbyService {
       authorId: author.id,
       name,
       size,
+      type,
+      password,
       currentSize: 1,
       users: [author],
       messages: [],
@@ -106,11 +115,20 @@ export class LobbyService {
   }
 
   // Вход в комнату
-  joinRoom(socketId: string, roomId: string): IRoom | false {
+  joinRoom(
+    socketId: string,
+    roomId: string,
+    roomPassword: string,
+  ): IRoom | false {
     const user = this.findOneUserBySocketId(socketId);
     const room = this.findOneRoomById(roomId);
 
+    // Если комната переполнена
     if (room.currentSize >= room.size) return false;
+
+    // Если пароль не совпадает
+    if (room.password !== roomPassword && room.type === RoomType.private)
+      return false;
 
     room.users.push(user);
     room.currentSize++;
@@ -120,6 +138,16 @@ export class LobbyService {
     );
 
     return room;
+  }
+
+  rejoinRoom(socketId: string, userId: number, roomId: string) {
+    const roomIndex = this.state.rooms.findIndex((room) => room.id === roomId);
+    if (roomIndex > -1) {
+      const currentRoom = this.state.rooms[roomIndex];
+      this.state.rooms[roomIndex].users = currentRoom.users.map((user) =>
+        user.id === userId ? { ...user, socketId } : user,
+      );
+    }
   }
 
   // Выход и комнаты
@@ -138,6 +166,31 @@ export class LobbyService {
     }
 
     return room;
+  }
+
+  leaveRoomBySocketId(socketId: string): IRoom | false {
+    let userFound = false;
+    let userIndex = -1;
+
+    const roomIndex = this.state.rooms.findIndex((room) => {
+      room.users.forEach((user, idx) => {
+        if (user.socketId === socketId) {
+          userFound = true;
+          userIndex = idx;
+        }
+      });
+      return userFound;
+    });
+
+    if (roomIndex > -1 && userIndex > -1 && userFound) {
+      const room = this.state.rooms[roomIndex];
+      room.currentSize--;
+      room.users.splice(userIndex, 1);
+
+      return room;
+    }
+
+    return false;
   }
 
   // Создания сообщения в комнате

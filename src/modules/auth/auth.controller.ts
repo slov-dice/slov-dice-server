@@ -1,31 +1,28 @@
 import {
   Body,
   Controller,
+  ForbiddenException,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
-  Get,
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 
 import { AuthService } from './auth.service';
-import { SignUpDto, SignInDto } from './dto/auth.dto';
-import { AuthRes } from './types/response.type';
+import { SignUpDto, SignInDto, ThirdPartyDto, GuestDto } from './dto/auth.dto';
+import { AuthRes, ThirdPartyUserData } from './types/response.type';
 import { GetCurrentUserId } from 'decorators';
 import { GetReqRT } from 'decorators/get-req-rt.decorator';
-import { DiscordGuard } from 'guards/discord.guard';
 import { AtGuard } from 'guards';
 
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private authService: AuthService,
-    private config: ConfigService,
-  ) {}
+  constructor(private authService: AuthService) {}
 
+  // Регистрация через почту
   @Post('local/signup')
   @HttpCode(HttpStatus.CREATED)
   signUpLocal(
@@ -35,6 +32,8 @@ export class AuthController {
     return this.authService.signUpLocal(dto, response);
   }
 
+  // Аутентификация через почту
+  @Post('local/signin')
   @HttpCode(HttpStatus.OK)
   signInLocal(
     @Body() dto: SignInDto,
@@ -43,17 +42,42 @@ export class AuthController {
     return this.authService.signInLocal(dto, response);
   }
 
-  @Get('discord')
-  @UseGuards(DiscordGuard)
-  authDiscord(): void {
-    console.log('Auth discord');
+  // Сторонняя авторизация
+  @Post('token')
+  async tokenAuth(
+    @Body() dto: ThirdPartyDto,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<AuthRes> {
+    try {
+      // Получаем токен пользователя с помощью кода
+      const responseToken = await this.authService.getTokenFromThirdParty(dto);
+
+      // Получаем юзера
+      const responseUser = await this.authService.getDataFromThirdParty(
+        dto.authType,
+        responseToken.data.access_token,
+      );
+
+      const userData: ThirdPartyUserData = responseUser.data;
+
+      // Регистрируем или аутентифицируем юзера
+      return this.authService.authByThirdParty(
+        dto.authType,
+        userData,
+        dto.socketId,
+        response,
+      );
+    } catch (error) {
+      throw new ForbiddenException('Unauthorized!');
+    }
   }
 
-  @Get('discord/redirect')
-  @UseGuards(DiscordGuard)
-  authDiscordCallback(@Res() res: Response) {
-    res.redirect('http://localhost:3000/lobby');
-    // return { redirectTo: this.config.get('DISCORD_REDIRECT_URL') };
+  @Post('guest')
+  guestAuth(
+    @Body() dto: GuestDto,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<AuthRes> {
+    return this.authService.guestAuth(dto.socketId, response);
   }
 
   @UseGuards(AtGuard)

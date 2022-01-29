@@ -1,6 +1,7 @@
 # Slov Dice Server
 
-TODO: ИЗБАВИТЬСЯ ОТ ПАБЛИК ГОВНА
+TODO: добавить проверку на from при аутентификации
+мб удалить addRegisteredUser socketId?
 
 db studio - npx prisma studio
 
