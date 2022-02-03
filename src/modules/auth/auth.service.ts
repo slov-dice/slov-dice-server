@@ -10,13 +10,21 @@ import { ConfigService } from '@nestjs/config';
 import { lastValueFrom } from 'rxjs';
 import { Response } from 'express';
 import * as argon2 from 'argon2';
+import { AxiosResponse } from 'axios';
+import { v4 as uuidv4 } from 'uuid';
 
-import { SignUpDto, SignInDto, ThirdPartyDto, AuthType } from './dto/auth.dto';
+import {
+  SignUpDto,
+  SignInDto,
+  ThirdPartyDto,
+  AuthType,
+  EmailConfirmDto,
+} from './dto/auth.dto';
 import { AuthRes, ThirdPartyUserData, Tokens } from './types/response.type';
 import { TokenParams } from './types/params.type';
 import { LobbyService } from 'modules/lobby/lobby.service';
 import { UsersService } from 'modules/users/users.service';
-import { AxiosResponse } from 'axios';
+import { MailService } from 'modules/mail/mail.service';
 @Injectable()
 export class AuthService {
   constructor(
@@ -25,6 +33,7 @@ export class AuthService {
     private lobby: LobbyService,
     private httpService: HttpService,
     private usersService: UsersService,
+    private mailService: MailService,
   ) {}
 
   async signUpLocal(dto: SignUpDto, response: Response): Promise<AuthRes> {
@@ -44,10 +53,15 @@ export class AuthService {
     );
 
     const tokens = await this.generateTokens(user.id);
-    // await this.usersService.updateRt(user.id, tokens.refresh_token);
     this.setCookies(tokens.access_token, tokens.refresh_token, response);
 
+    // Добавление сокета
     this.lobby.addRegisteredUser(user, dto.socketId);
+
+    // Email верификация
+    // TODO: СДЕЛАТЬ ХЭШИРОВАННЫЙ JWT ТОКЕН
+    const verifyToken = uuidv4();
+    await this.mailService.sendUserConfirmation(user, verifyToken);
 
     return { id: user.id, nickname: user.nickname, email: user.email };
   }
@@ -65,8 +79,6 @@ export class AuthService {
 
     const tokens = await this.generateTokens(user.id);
     this.setCookies(tokens.access_token, tokens.refresh_token, response);
-
-    // await this.usersService.updateRt(user.id, tokens.refresh_token);
 
     return {
       id: user.id,
@@ -126,7 +138,6 @@ export class AuthService {
     if (user) {
       const tokens = await this.generateTokens(user.id);
       this.setCookies(tokens.access_token, tokens.refresh_token, response);
-      // await this.usersService.updateRt(user.id, tokens.refresh_token);
       return {
         id: user.id,
         nickname: user.nickname,
@@ -145,7 +156,6 @@ export class AuthService {
       );
 
       const tokens = await this.generateTokens(createdUser.id);
-      // await this.usersService.updateRt(createdUser.id, tokens.refresh_token);
       this.setCookies(tokens.access_token, tokens.refresh_token, response);
       this.lobby.addRegisteredUser(createdUser, socketId);
 
@@ -183,8 +193,6 @@ export class AuthService {
   async logout(userId: number, response: Response) {
     response.clearCookie('access_token');
     response.clearCookie('refresh_token');
-
-    // this.usersService.removeRt(userId);
   }
 
   async refreshTokens(refresh_token: string, res: Response) {
@@ -224,6 +232,15 @@ export class AuthService {
     }
   }
 
+  async emailConfirmation(dto: EmailConfirmDto) {
+    // TODO: СРАВНЕНИЕ ДАННЫХ ТОКЕНА И ВХОДЯЩИХ ДАННЫХ
+    const user = await this.usersService.verifyEmail(dto.email);
+
+    if (!user.verified) {
+      throw new NotFoundException('Failed to verify password');
+    }
+  }
+
   hashData(data: string) {
     return argon2.hash(data);
   }
@@ -246,7 +263,7 @@ export class AuthService {
           sub: userId,
         },
         {
-          secret: this.config.get<string>('JWT_SECRET_AT'),
+          secret: this.config.get('JWT_SECRET_AT'),
           expiresIn: 15 * 60, // 15 минут
         },
       ),
@@ -255,7 +272,7 @@ export class AuthService {
           sub: userId,
         },
         {
-          secret: this.config.get<string>('JWT_SECRET_RT'),
+          secret: this.config.get('JWT_SECRET_RT'),
           expiresIn: 60 * 60 * 24 * 7, // неделя
         },
       ),

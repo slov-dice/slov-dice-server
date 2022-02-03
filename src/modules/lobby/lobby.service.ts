@@ -19,12 +19,14 @@ export class LobbyService {
   // Записываем пользователей из базы данных на сервер
   async initUsers() {
     const usersDB = await this.usersService.getAll();
-    const usersLobby: LobbyUser[] = usersDB.map((user) => ({
-      id: user.id,
-      nickname: user.nickname,
-      socketId: '',
-      status: 'offline',
-    }));
+    const usersLobby: LobbyUser[] = usersDB
+      ? usersDB.map((user) => ({
+          id: user.id,
+          nickname: user.nickname,
+          socketId: '',
+          status: 'offline',
+        }))
+      : [];
     this.state.users = usersLobby;
   }
 

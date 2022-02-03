@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   ForbiddenException,
-  Get,
   HttpCode,
   HttpStatus,
   Post,
@@ -12,11 +11,17 @@ import {
 import { Response } from 'express';
 
 import { AuthService } from './auth.service';
-import { SignUpDto, SignInDto, ThirdPartyDto, GuestDto } from './dto/auth.dto';
 import { AuthRes, ThirdPartyUserData } from './types/response.type';
 import { GetCurrentUserId } from 'decorators';
 import { GetReqRT } from 'decorators/get-req-rt.decorator';
 import { AtGuard } from 'guards';
+import {
+  SignUpDto,
+  SignInDto,
+  ThirdPartyDto,
+  GuestDto,
+  EmailConfirmDto,
+} from './dto/auth.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -97,5 +102,11 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ) {
     return this.authService.refreshTokens(rt, response);
+  }
+
+  @Post('confirm')
+  @HttpCode(HttpStatus.OK)
+  emailConfirmation(@Body() dto: EmailConfirmDto) {
+    this.authService.emailConfirmation(dto);
   }
 }
