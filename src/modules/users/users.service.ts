@@ -58,6 +58,13 @@ export class UsersService {
     });
   }
 
+  async updatePassword(email: string, hash: string): Promise<User> {
+    return await this.prisma.user.update({
+      where: { email },
+      data: { hash },
+    });
+  }
+
   generateNicknameByEmail(email: string): string {
     return email.split('@')[0];
   }

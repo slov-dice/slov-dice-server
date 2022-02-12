@@ -26,4 +26,21 @@ export class MailService {
       },
     });
   }
+
+  async sendUserRestorePassword(user: User, token: string) {
+    const url = `http://${this.config.get(
+      'CLIENT_SERVER',
+    )}/restore-password?token=${token}`;
+
+    await this.mailerService.sendMail({
+      to: user.email,
+      from: '"Slov Dice" <slov-dice@outlook.com>',
+      subject: 'Восстановление пароля.',
+      template: 'restore',
+      context: {
+        nickname: user.nickname,
+        url,
+      },
+    });
+  }
 }

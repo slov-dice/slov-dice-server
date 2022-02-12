@@ -1,55 +1,37 @@
-import { IsEmail, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator'
 
 export class SignUpDto {
   @IsEmail()
   @IsNotEmpty()
-  email: string;
+  email: string
 
   @IsString()
   @IsNotEmpty()
-  nickname: string;
+  nickname: string
 
   @IsString()
   @IsNotEmpty()
-  password: string;
-
-  @IsString()
-  @IsNotEmpty()
-  socketId: string;
+  password: string
 }
 
 export class SignInDto {
-  @IsString()
+  @IsEmail()
   @IsNotEmpty()
-  email: string;
+  email: string
 
   @IsString()
   @IsNotEmpty()
-  password: string;
-
-  @IsString()
-  @IsNotEmpty()
-  socketId: string;
+  password: string
 }
 
 export class ThirdPartyDto {
   @IsString()
   @IsNotEmpty()
-  code: string;
+  code: string
 
   @IsString()
   @IsNotEmpty()
-  socketId: string;
-
-  @IsString()
-  @IsNotEmpty()
-  authType: AuthType;
-}
-
-export class GuestDto {
-  @IsString()
-  @IsNotEmpty()
-  socketId: string;
+  authType: AuthType
 }
 
 export enum AuthType {
@@ -60,15 +42,23 @@ export enum AuthType {
 }
 
 export class EmailConfirmDto {
-  @IsNumber()
+  @IsString()
   @IsNotEmpty()
-  id: number;
+  token: string
+}
 
+export class RestoreDto {
   @IsEmail()
   @IsNotEmpty()
-  email: string;
+  email: string
+}
+
+export class ChangePasswordDto {
+  @IsString()
+  @IsNotEmpty()
+  token: string
 
   @IsString()
   @IsNotEmpty()
-  token: string;
+  password: string
 }
