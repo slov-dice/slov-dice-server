@@ -1,8 +1,23 @@
-import { RoomType } from 'modules/lobby/dto/room.dto';
+export type SocketId = string;
+export type UserId = number;
+export type RoomId = string;
+export enum UserStatusEnum {
+  offline = 'offline',
+  online = 'online',
+  inRoom = 'inRoom',
+}
+export enum RoomTypeEnum {
+  public = 'PUBLIC',
+  private = 'PRIVATE',
+}
+export enum RoomMessageTypeEnum {
+  custom = 'custom',
+  command = 'command',
+}
 
-export interface IProfile {
-  id: number;
-  socketId: string;
+export interface Profile {
+  id: UserId;
+  email: string;
   nickname: string;
   statuses: {
     isAuth: boolean;
@@ -10,33 +25,49 @@ export interface IProfile {
   };
 }
 
-export interface ILobby {
+export interface Lobby {
   users: LobbyUser[];
-  messages: IMessage[];
-  rooms: IRoom[];
+  chat: LobbyChat[];
+  rooms: PreviewRoom[];
 }
 
 export interface LobbyUser {
-  socketId: string;
-  id: number;
+  socketId: SocketId;
+  id: UserId;
   nickname: string;
-  status: 'offline' | 'online';
+  status: UserStatusEnum;
 }
 
-export interface IMessage {
+export interface LobbyChat {
   id: string;
+  authorId: UserId;
   author: string;
   text: string;
 }
 
-export interface IRoom {
+export interface RoomUser {
+  [id: UserId]: SocketId;
+}
+
+export interface RoomChat {
   id: string;
-  authorId: number;
+  authorId: UserId;
+  author: string;
+  text: string;
+  type: RoomMessageTypeEnum;
+}
+
+export interface PreviewRoom {
+  id: RoomId;
+  authorId: UserId;
   name: string;
   size: number;
-  type: RoomType;
-  password: string;
   currentSize: number;
-  users: LobbyUser[];
-  messages: IMessage[];
+  type: RoomTypeEnum;
+  users: RoomUser[];
+}
+
+export interface FullRoom extends PreviewRoom {
+  password: string;
+  messages: RoomChat[];
 }

@@ -1,4 +1,6 @@
-export type CreateRoomDto = [RoomName, RoomSize, RoomPassword, RoomType];
+import { RoomTypeEnum } from 'interfaces/app';
+
+export type CreateRoomDto = [RoomName, RoomSize, RoomPassword, RoomTypeEnum];
 
 export type JoinRoomDto = [RoomId, RoomPassword];
 
@@ -9,8 +11,3 @@ type RoomId = string;
 type RoomName = string;
 type RoomSize = number;
 type RoomPassword = string;
-
-export enum RoomType {
-  public = 'PUBLIC',
-  private = 'PRIVATE',
-}

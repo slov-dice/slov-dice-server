@@ -2,21 +2,27 @@ import {
   Body,
   Controller,
   ForbiddenException,
-  Get,
   HttpCode,
   HttpStatus,
   Post,
   Res,
   UseGuards,
-} from '@nestjs/common';
-import { Response } from 'express';
+} from '@nestjs/common'
+import { Response } from 'express'
 
-import { AuthService } from './auth.service';
-import { SignUpDto, SignInDto, ThirdPartyDto, GuestDto } from './dto/auth.dto';
-import { AuthRes, ThirdPartyUserData } from './types/response.type';
-import { GetCurrentUserId } from 'decorators';
-import { GetReqRT } from 'decorators/get-req-rt.decorator';
-import { AtGuard } from 'guards';
+import { AuthService } from './auth.service'
+import {
+  SignUpDto,
+  SignInDto,
+  ThirdPartyDto,
+  RestoreDto,
+  EmailConfirmDto,
+  ChangePasswordDto,
+} from './dto/auth.dto'
+import { AuthRes, ThirdPartyUserData } from './types/response.type'
+import { GetCurrentUserId } from 'decorators'
+import { GetReqRT } from 'decorators/get-req-rt.decorator'
+import { AtGuard } from 'guards'
 
 @Controller('auth')
 export class AuthController {
@@ -29,7 +35,7 @@ export class AuthController {
     @Body() dto: SignUpDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<AuthRes> {
-    return this.authService.signUpLocal(dto, response);
+    return this.authService.signUpLocal(dto, response)
   }
 
   // Аутентификация через почту
@@ -39,7 +45,7 @@ export class AuthController {
     @Body() dto: SignInDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<AuthRes> {
-    return this.authService.signInLocal(dto, response);
+    return this.authService.signInLocal(dto, response)
   }
 
   // Сторонняя авторизация
@@ -50,34 +56,26 @@ export class AuthController {
   ): Promise<AuthRes> {
     try {
       // Получаем токен пользователя с помощью кода
-      const responseToken = await this.authService.getTokenFromThirdParty(dto);
+      const responseToken = await this.authService.getTokenFromThirdParty(dto)
 
       // Получаем юзера
       const responseUser = await this.authService.getDataFromThirdParty(
         dto.authType,
         responseToken.data.access_token,
-      );
+      )
 
-      const userData: ThirdPartyUserData = responseUser.data;
+      const userData: ThirdPartyUserData = responseUser.data
 
       // Регистрируем или аутентифицируем юзера
-      return this.authService.authByThirdParty(
-        dto.authType,
-        userData,
-        dto.socketId,
-        response,
-      );
+      return this.authService.authByThirdParty(dto.authType, userData, response)
     } catch (error) {
-      throw new ForbiddenException('Unauthorized!');
+      throw new ForbiddenException('Unauthorized!')
     }
   }
 
   @Post('guest')
-  guestAuth(
-    @Body() dto: GuestDto,
-    @Res({ passthrough: true }) response: Response,
-  ): Promise<AuthRes> {
-    return this.authService.guestAuth(dto.socketId, response);
+  guestAuth(@Res({ passthrough: true }) response: Response): Promise<AuthRes> {
+    return this.authService.guestAuth(response)
   }
 
   @UseGuards(AtGuard)
@@ -87,7 +85,7 @@ export class AuthController {
     @GetCurrentUserId() userId: number,
     @Res({ passthrough: true }) response: Response,
   ) {
-    return this.authService.logout(userId, response);
+    return this.authService.logout(userId, response)
   }
 
   @Post('refresh')
@@ -96,6 +94,24 @@ export class AuthController {
     @GetReqRT() rt: string,
     @Res({ passthrough: true }) response: Response,
   ) {
-    return this.authService.refreshTokens(rt, response);
+    return this.authService.refreshTokens(rt, response)
+  }
+
+  @Post('confirm')
+  @HttpCode(HttpStatus.OK)
+  emailConfirmation(@Body() dto: EmailConfirmDto) {
+    return this.authService.emailConfirmation(dto)
+  }
+
+  @Post('restore')
+  @HttpCode(HttpStatus.OK)
+  restorePassword(@Body() dto: RestoreDto) {
+    return this.authService.restore(dto)
+  }
+
+  @Post('change/password')
+  @HttpCode(HttpStatus.OK)
+  changePassword(@Body() dto: ChangePasswordDto) {
+    return this.authService.changePassword(dto)
   }
 }

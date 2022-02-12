@@ -1,222 +1,142 @@
-import { Injectable } from '@nestjs/common';
-import { v4 as uuidv4 } from 'uuid';
-import { User } from '@prisma/client';
+import { Injectable } from '@nestjs/common'
+import { User } from '@prisma/client'
 
-import { UsersService } from 'modules/users/users.service';
-import type { ILobby, LobbyUser, IMessage, IRoom } from 'interfaces/app';
-import { RoomType } from './dto/room.dto';
+import { LobbyUsersService } from './lobbyUsers.service'
+import { LobbyRoomsService, RoomResponse } from './lobbyRooms.service'
+import { LobbyChatService } from './lobbyChat.service'
+import { UsersService } from 'modules/users/users.service'
+import type {
+  Lobby,
+  LobbyUser,
+  UserId,
+  SocketId,
+  RoomId,
+  LobbyChat,
+  RoomTypeEnum,
+  RoomChat,
+} from 'interfaces/app'
 
 @Injectable()
 export class LobbyService {
-  state: ILobby = {
-    users: [],
-    rooms: [],
-    messages: [],
-  };
+  constructor(
+    private usersService: UsersService,
+    private lobbyUsersService: LobbyUsersService,
+    private lobbyRoomsService: LobbyRoomsService,
+    private lobbyChatService: LobbyChatService,
+  ) {}
 
-  constructor(private usersService: UsersService) {}
-
-  // Записываем пользователей из базы данных на сервер
-  async initUsers() {
-    const usersDB = await this.usersService.getAll();
-    const usersLobby: LobbyUser[] = usersDB.map((user) => ({
-      id: user.id,
-      nickname: user.nickname,
-      socketId: '',
-      status: 'offline',
-    }));
-    this.state.users = usersLobby;
+  // Записываем пользователей из базы данных в лобби
+  async init() {
+    const usersDB = await this.usersService.getAll()
+    this.lobbyUsersService.initUsers(usersDB)
   }
 
-  // Добавляет зарегистрированного юзера
-  addRegisteredUser(user: User, socketId: string): void {
-    const userLobby: LobbyUser = {
-      id: user.id,
-      nickname: user.nickname,
-      socketId: '',
-      status: 'offline',
-    };
-    this.state.users.push(userLobby);
+  getLobby(): Lobby {
+    return {
+      users: this.lobbyUsersService.getAll(),
+      rooms: this.lobbyRoomsService.getAllPreview(),
+      chat: this.lobbyChatService.getAll(),
+    }
   }
 
-  // Поиск пользователя по socketId
-  findOneUserBySocketId(socketId: string): LobbyUser {
-    return this.state.users.find((user) => user.socketId === socketId);
+  // Создаёт зарегистрированного пользователя в лобби
+  createRegisteredUser(user: User): void {
+    this.lobbyUsersService.create(user)
   }
 
-  // Делаем юзера онлайн, после успешной авторизации
-  setUserOnline(userId: number, socketId: string): LobbyUser {
-    this.state.users = this.state.users.map((user) => {
-      return user.id === userId
-        ? { ...user, status: 'online', socketId }
-        : user;
-    });
-    return this.findOneUserBySocketId(socketId);
+  setUserOnline(userId: UserId, socketId: SocketId): LobbyUser {
+    return this.lobbyUsersService.setOnlineByUserId(userId, socketId)
   }
 
-  // Делаем пользователя оффлайн, если сокет потерял соединение
-  setUserOffline(socketId: string): LobbyUser {
-    const user = this.findOneUserBySocketId(socketId);
-    this.state.users = this.state.users.map((user) => {
-      return user.socketId === socketId
-        ? { ...user, status: 'offline', socketId: '' }
-        : user;
-    });
+  setUserOffline(socketId: string): LobbyUser | false {
+    return this.lobbyUsersService.setOffline(socketId)
+  }
 
-    return user;
+  userLogout(
+    roomId: RoomId,
+    socketId: SocketId,
+  ): { roomData: RoomResponse | false; userData: LobbyUser | false } {
+    let roomData: RoomResponse | false = false
+    const userData = this.lobbyUsersService.setOffline(socketId)
+
+    // Исключаем пользователя из комнаты, если он в ней
+    if (roomId) {
+      roomData = this.lobbyRoomsService.removeUser(roomId, socketId)
+    }
+
+    return { roomData, userData }
   }
 
   // Создание сообщения в лобби
-  createMessage(socketId: string, text: string): IMessage {
-    const author = this.findOneUserBySocketId(socketId);
-    const messageId = uuidv4();
-    const message = {
-      id: messageId,
-      authorId: author.id,
-      author: author.nickname,
-      text,
-    };
+  createLobbyMessage(socketId: string, text: string): LobbyChat {
+    const user = this.lobbyUsersService.findBySocketId(socketId)
+    const message = this.lobbyChatService.create(user, text)
 
-    this.state.messages.push(message);
-
-    return message;
+    return message
   }
 
   // Создание комнаты в лобби
   createRoom(
-    socketId: string,
+    socketId: SocketId,
     name: string,
     size: number,
     password: string,
-    type: RoomType,
-  ): IRoom {
-    const author = this.findOneUserBySocketId(socketId);
-    const roomId = uuidv4();
-    const room: IRoom = {
-      id: roomId,
-      authorId: author.id,
+    type: RoomTypeEnum,
+  ): { roomData: RoomResponse; userData: LobbyUser } {
+    const userData = this.lobbyUsersService.setInRoom(socketId)
+    const roomData = this.lobbyRoomsService.create(
+      userData,
       name,
       size,
-      type,
       password,
-      currentSize: 1,
-      users: [author],
-      messages: [],
-    };
+      type,
+    )
 
-    this.state.rooms.push(room);
-
-    return room;
-  }
-
-  // Поиск комнаты по id
-  findOneRoomById(roomId: string): IRoom {
-    return this.state.rooms.find((room) => room.id === roomId);
+    return { roomData, userData }
   }
 
   // Вход в комнату
   joinRoom(
-    socketId: string,
-    roomId: string,
+    socketId: SocketId,
+    roomId: RoomId,
     roomPassword: string,
-  ): IRoom | false {
-    const user = this.findOneUserBySocketId(socketId);
-    const room = this.findOneRoomById(roomId);
+  ): { roomData: RoomResponse | false; userData: LobbyUser } {
+    // TODO: Проверка на статус пользователя "в комнате"
+    const userData = this.lobbyUsersService.setInRoom(socketId)
+    const roomData = this.lobbyRoomsService.join(userData, roomId, roomPassword)
 
-    // Если комната переполнена
-    if (room.currentSize >= room.size) return false;
-
-    // Если пароль не совпадает
-    if (room.password !== roomPassword && room.type === RoomType.private)
-      return false;
-
-    room.users.push(user);
-    room.currentSize++;
-
-    this.state.rooms = this.state.rooms.map((item) =>
-      item.id === room.id ? room : item,
-    );
-
-    return room;
+    return { userData, roomData }
   }
 
-  rejoinRoom(socketId: string, userId: number, roomId: string) {
-    const roomIndex = this.state.rooms.findIndex((room) => room.id === roomId);
-    if (roomIndex > -1) {
-      const currentRoom = this.state.rooms[roomIndex];
-      this.state.rooms[roomIndex].users = currentRoom.users.map((user) =>
-        user.id === userId ? { ...user, socketId } : user,
-      );
-    }
+  rejoinRoom(
+    socketId: string,
+    roomId: string,
+  ): { roomData: RoomResponse | false; userData: LobbyUser } {
+    const userData = this.lobbyUsersService.setInRoom(socketId)
+    const roomData = this.lobbyRoomsService.rejoin(userData, roomId)
+
+    return { userData, roomData }
   }
 
   // Выход и комнаты
-  leaveRoom(socketId: string, roomId: string): IRoom {
-    const room = this.findOneRoomById(roomId);
-    const userIndex = room.users.findIndex(
-      (item) => item.socketId === socketId,
-    );
+  leaveRoom(
+    socketId: string,
+    roomId: string,
+  ): { roomData: RoomResponse | false; userData: LobbyUser } {
+    const userData = this.lobbyUsersService.setOnlineBySocketId(socketId)
+    const roomData = this.lobbyRoomsService.removeUser(roomId, socketId)
 
-    room.users.splice(userIndex, 1);
-    room.currentSize--;
-
-    // Если выходит последний пользователь, то удаляем комнату
-    if (room.currentSize <= 0) {
-      this.state.rooms = this.state.rooms.filter((room) => room.id !== roomId);
-    }
-
-    return room;
-  }
-
-  leaveRoomBySocketId(socketId: string): IRoom | false {
-    let userFound = false;
-    let userIndex = -1;
-
-    const roomIndex = this.state.rooms.findIndex((room) => {
-      room.users.forEach((user, idx) => {
-        if (user.socketId === socketId) {
-          userFound = true;
-          userIndex = idx;
-        }
-      });
-      return userFound;
-    });
-
-    if (roomIndex > -1 && userIndex > -1 && userFound) {
-      const room = this.state.rooms[roomIndex];
-      room.currentSize--;
-      room.users.splice(userIndex, 1);
-
-      return room;
-    }
-
-    return false;
+    return { userData, roomData }
   }
 
   // Создания сообщения в комнате
   createMessageInRoom(
-    socketId: string,
-    roomId: string,
+    socketId: SocketId,
+    roomId: RoomId,
     text: string,
-  ): { message: IMessage; roomId: string } {
-    const isCommand = text.startsWith('/d');
-    let commandText = '';
-    if (isCommand) {
-      const dice: number = +text.split('d')[1];
-      commandText = `[${Math.floor(Math.random() * dice) + 1}]`;
-    }
-    const room = this.findOneRoomById(roomId);
-    const author = this.findOneUserBySocketId(socketId);
-    const messageId = uuidv4();
-    const message = {
-      id: messageId,
-      authorId: author.id,
-      author: author.nickname,
-      text: isCommand ? commandText : text,
-    };
-
-    room.messages.push(message);
-
-    return { message, roomId: room.id };
+  ): { message: RoomChat; roomId: RoomId } {
+    const user = this.lobbyUsersService.findBySocketId(socketId)
+    const message = this.lobbyRoomsService.createMessage(user, roomId, text)
+    return { message, roomId: roomId }
   }
 }

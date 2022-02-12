@@ -20,6 +20,7 @@ export class UsersService {
         nickname,
         from,
         hash,
+        verified: false,
       },
     });
   }
@@ -50,42 +51,19 @@ export class UsersService {
     });
   }
 
-  // async findOneByRefreshToken(refresh_token: string): Promise<User> {
-  //   return await this.prisma.user.findFirst({
-  //     where: { refresh_token },
-  //   });
-  // }
+  async verifyEmail(email: string): Promise<User> {
+    return await this.prisma.user.update({
+      where: { email },
+      data: { verified: true },
+    });
+  }
 
-  // async updateRefreshTokenById(
-  //   id: number,
-  //   refresh_token: string,
-  // ): Promise<User> {
-  //   return await this.prisma.user.update({
-  //     where: { id },
-  //     data: { refresh_token },
-  //   });
-  // }
-
-  // async updateRt(id: number, refresh_token: string) {
-  //   await this.prisma.user.update({
-  //     where: { id },
-  //     data: { refresh_token },
-  //   });
-  // }
-
-  // async removeRt(id: number) {
-  //   await this.prisma.user.updateMany({
-  //     where: {
-  //       id,
-  //       refresh_token: {
-  //         not: null,
-  //       },
-  //     },
-  //     data: {
-  //       refresh_token: null,
-  //     },
-  //   });
-  // }
+  async updatePassword(email: string, hash: string): Promise<User> {
+    return await this.prisma.user.update({
+      where: { email },
+      data: { hash },
+    });
+  }
 
   generateNicknameByEmail(email: string): string {
     return email.split('@')[0];
