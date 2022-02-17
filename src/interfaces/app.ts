@@ -1,6 +1,6 @@
-export type SocketId = string;
-export type UserId = number;
-export type RoomId = string;
+export type SocketId = string
+export type UserId = number
+export type RoomId = string
 export enum UserStatusEnum {
   offline = 'offline',
   online = 'online',
@@ -14,60 +14,66 @@ export enum RoomMessageTypeEnum {
   custom = 'custom',
   command = 'command',
 }
+export enum AuthTypeEnum {
+  google = 'GOOGLE',
+  discord = 'DISCORD',
+  email = 'EMAIL',
+  guest = 'GUEST',
+}
 
 export interface Profile {
-  id: UserId;
-  email: string;
-  nickname: string;
+  id: UserId
+  email: string
+  nickname: string
   statuses: {
-    isAuth: boolean;
-    inArea: boolean;
-  };
+    isAuth: boolean
+    inArea: boolean
+  }
 }
 
 export interface Lobby {
-  users: LobbyUser[];
-  chat: LobbyChat[];
-  rooms: PreviewRoom[];
+  users: LobbyUser[]
+  chat: LobbyChat[]
+  rooms: PreviewRoom[]
 }
 
 export interface LobbyUser {
-  socketId: SocketId;
-  id: UserId;
-  nickname: string;
-  status: UserStatusEnum;
+  socketId: SocketId
+  id: UserId
+  nickname: string
+  status: UserStatusEnum
 }
 
 export interface LobbyChat {
-  id: string;
-  authorId: UserId;
-  author: string;
-  text: string;
+  id: string
+  authorId: UserId
+  author: string
+  text: string
 }
 
 export interface RoomUser {
-  [id: UserId]: SocketId;
+  [id: UserId]: SocketId
 }
 
 export interface RoomChat {
-  id: string;
-  authorId: UserId;
-  author: string;
-  text: string;
-  type: RoomMessageTypeEnum;
+  id: string
+  authorId: UserId
+  author: string
+  text: string
+  type: RoomMessageTypeEnum
 }
 
 export interface PreviewRoom {
-  id: RoomId;
-  authorId: UserId;
-  name: string;
-  size: number;
-  currentSize: number;
-  type: RoomTypeEnum;
-  users: RoomUser[];
+  id: RoomId
+  authorId: UserId
+  name: string
+  size: number
+  currentSize: number
+  type: RoomTypeEnum
+  users: RoomUser[]
 }
 
 export interface FullRoom extends PreviewRoom {
-  password: string;
-  messages: RoomChat[];
+  password: string
+  messages: RoomChat[]
 }

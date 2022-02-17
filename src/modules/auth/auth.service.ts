@@ -11,13 +11,11 @@ import { lastValueFrom } from 'rxjs'
 import { Response } from 'express'
 import * as argon2 from 'argon2'
 import { AxiosResponse } from 'axios'
-import { v4 as uuidv4 } from 'uuid'
 
 import {
   SignUpDto,
   SignInDto,
   ThirdPartyDto,
-  AuthType,
   EmailConfirmDto,
   RestoreDto,
   ChangePasswordDto,
@@ -27,6 +25,7 @@ import { TokenParams } from './types/params.type'
 import { LobbyService } from 'modules/lobby/lobby.service'
 import { UsersService } from 'modules/users/users.service'
 import { MailService } from 'modules/mail/mail.service'
+import { AuthTypeEnum } from 'interfaces/app'
 
 @Injectable()
 export class AuthService {
@@ -52,7 +51,7 @@ export class AuthService {
       dto.email,
       dto.nickname,
       hashedPassword,
-      AuthType.email,
+      AuthTypeEnum.email,
     )
 
     const tokens = await this.generateTokens(user.id, user.email)
@@ -112,7 +111,7 @@ export class AuthService {
   }
 
   async getDataFromThirdParty(
-    authType: AuthType,
+    authType: AuthTypeEnum,
     access_token: string,
   ): Promise<AxiosResponse<any, any>> {
     const url = this.getDataUrlThirdParty(authType)
@@ -127,7 +126,7 @@ export class AuthService {
   }
 
   async authByThirdParty(
-    authType: AuthType,
+    authType: AuthTypeEnum,
     data: ThirdPartyUserData,
     response: Response,
   ): Promise<AuthRes> {
@@ -180,7 +179,7 @@ export class AuthService {
       null,
       nickname,
       '',
-      AuthType.guest,
+      AuthTypeEnum.guest,
     )
 
     const tokens = await this.generateTokens(user.id, user.email)
@@ -339,20 +338,20 @@ export class AuthService {
     )
   }
 
-  getTokenUrlThirdParty(authType: AuthType): string {
+  getTokenUrlThirdParty(authType: AuthTypeEnum): string {
     switch (authType) {
-      case AuthType.discord:
+      case AuthTypeEnum.discord:
         return 'https://discord.com/api/oauth2/token'
-      case AuthType.google:
+      case AuthTypeEnum.google:
         return 'https://oauth2.googleapis.com/token'
     }
   }
 
-  getDataUrlThirdParty(authType: AuthType): string {
+  getDataUrlThirdParty(authType: AuthTypeEnum): string {
     switch (authType) {
-      case AuthType.discord:
+      case AuthTypeEnum.discord:
         return 'https://discord.com/api/v6/users/@me'
-      case AuthType.google:
+      case AuthTypeEnum.google:
         return 'https://www.googleapis.com/oauth2/v2/userinfo'
     }
   }

@@ -1,8 +1,8 @@
-import { User } from '@prisma/client';
-import { Injectable } from '@nestjs/common';
+import { User } from '@prisma/client'
+import { Injectable } from '@nestjs/common'
 
-import { PrismaService } from 'modules/prisma/prisma.service';
-import { AuthType } from 'modules/auth/dto/auth.dto';
+import { PrismaService } from 'modules/prisma/prisma.service'
+import { AuthTypeEnum } from 'interfaces/app'
 
 @Injectable()
 export class UsersService {
@@ -12,7 +12,7 @@ export class UsersService {
     email: string | null,
     nickname: string,
     hash: string,
-    from: AuthType,
+    from: AuthTypeEnum,
   ): Promise<User> {
     return await this.prisma.user.create({
       data: {
@@ -22,15 +22,15 @@ export class UsersService {
         hash,
         verified: false,
       },
-    });
+    })
   }
 
   async getAll(): Promise<User[]> {
-    return this.prisma.user.findMany();
+    return this.prisma.user.findMany()
   }
 
   async getTotalUsersCount(): Promise<number> {
-    return await this.prisma.user.count();
+    return await this.prisma.user.count()
   }
 
   async findOneByEmailAndNickname(
@@ -39,7 +39,7 @@ export class UsersService {
   ): Promise<User> {
     return await this.prisma.user.findFirst({
       where: { OR: [{ email }, { nickname }] },
-    });
+    })
   }
 
   async findUnique(
@@ -48,24 +48,24 @@ export class UsersService {
   ): Promise<User> {
     return await this.prisma.user.findUnique({
       where: { [name]: param },
-    });
+    })
   }
 
   async verifyEmail(email: string): Promise<User> {
     return await this.prisma.user.update({
       where: { email },
       data: { verified: true },
-    });
+    })
   }
 
   async updatePassword(email: string, hash: string): Promise<User> {
     return await this.prisma.user.update({
       where: { email },
       data: { hash },
-    });
+    })
   }
 
   generateNicknameByEmail(email: string): string {
-    return email.split('@')[0];
+    return email.split('@')[0]
   }
 }

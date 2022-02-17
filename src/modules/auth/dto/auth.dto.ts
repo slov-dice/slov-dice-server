@@ -1,5 +1,7 @@
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator'
 
+import { AuthTypeEnum } from 'interfaces/app'
+
 export class SignUpDto {
   @IsEmail()
   @IsNotEmpty()
@@ -31,14 +33,7 @@ export class ThirdPartyDto {
 
   @IsString()
   @IsNotEmpty()
-  authType: AuthType
-}
-
-export enum AuthType {
-  google = 'GOOGLE',
-  discord = 'DISCORD',
-  email = 'EMAIL',
-  guest = 'GUEST',
+  authType: AuthTypeEnum
 }
 
 export class EmailConfirmDto {
