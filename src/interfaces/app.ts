@@ -1,6 +1,8 @@
 export type SocketId = string
 export type UserId = number
 export type RoomId = string
+export type AccessToken = string
+
 export enum UserStatusEnum {
   offline = 'offline',
   online = 'online',
@@ -15,10 +17,14 @@ export enum RoomMessageTypeEnum {
   command = 'command',
 }
 export enum AuthTypeEnum {
+  email = 'EMAIL',
   google = 'GOOGLE',
   discord = 'DISCORD',
-  email = 'EMAIL',
   guest = 'GUEST',
+}
+export enum LocaleEnum {
+  ru = 'RU',
+  en = 'EN',
 }
 
 export interface Profile {
@@ -27,7 +33,7 @@ export interface Profile {
   nickname: string
   statuses: {
     isAuth: boolean
-    inArea: boolean
+    inRoom: boolean
   }
 }
 

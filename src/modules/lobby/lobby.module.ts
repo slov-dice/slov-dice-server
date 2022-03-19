@@ -1,13 +1,15 @@
-import { Module } from '@nestjs/common';
+import { Module } from '@nestjs/common'
+import { JwtModule } from '@nestjs/jwt'
 
-import { UsersService } from 'modules/users/users.service';
-import { LobbyGateway } from './lobby.gateway';
-import { LobbyService } from './lobby.service';
-import { LobbyUsersService } from './lobbyUsers.service';
-import { LobbyRoomsService } from './lobbyRooms.service';
-import { LobbyChatService } from './lobbyChat.service';
+import { UsersService } from 'modules/users/users.service'
+import { LobbyGateway } from './lobby.gateway'
+import { LobbyService } from './lobby.service'
+import { LobbyUsersService } from './lobbyUsers.service'
+import { LobbyRoomsService } from './lobbyRooms.service'
+import { LobbyChatService } from './lobbyChat.service'
 
 @Module({
+  imports: [JwtModule.register({})],
   providers: [
     LobbyGateway,
     LobbyService,

@@ -57,3 +57,9 @@ export class ChangePasswordDto {
   @IsNotEmpty()
   password: string
 }
+
+export class LogoutDto {
+  @IsString()
+  @IsNotEmpty()
+  from: AuthTypeEnum
+}

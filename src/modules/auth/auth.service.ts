@@ -19,13 +19,16 @@ import {
   EmailConfirmDto,
   RestoreDto,
   ChangePasswordDto,
+  LogoutDto,
 } from './dto/auth.dto'
 import { AuthRes, ThirdPartyUserData, Tokens } from './types/response.type'
 import { TokenParams } from './types/params.type'
+import { TokenData } from './types/tokens.type'
 import { LobbyService } from 'modules/lobby/lobby.service'
 import { UsersService } from 'modules/users/users.service'
 import { MailService } from 'modules/mail/mail.service'
 import { AuthTypeEnum } from 'interfaces/app'
+import { t } from 'languages'
 
 @Injectable()
 export class AuthService {
@@ -44,7 +47,7 @@ export class AuthService {
       dto.nickname,
     )
 
-    if (userExists) throw new ForbiddenException('User already exists!')
+    if (userExists) throw new ForbiddenException(t('auth.error.userExist'))
 
     const hashedPassword = await this.hashData(dto.password)
     const user = await this.usersService.create(
@@ -71,12 +74,17 @@ export class AuthService {
     const user = await this.usersService.findUnique('email', dto.email)
 
     // Если пользователь не найден
-    if (!user) throw new ForbiddenException('User not found')
+    if (!user) throw new ForbiddenException(t('auth.error.userNotFound'))
+
+    // Если пользователь зарегистрирован через сторонний сервис
+    if (user.from !== AuthTypeEnum.email)
+      throw new ForbiddenException(t('auth.error.userRegisteredByThirdParty'))
 
     const passwordMatches = await argon2.verify(user.hash, dto.password)
 
     // Если пароли не совпадают
-    if (!passwordMatches) throw new ForbiddenException('Access Denied')
+    if (!passwordMatches)
+      throw new ForbiddenException(t('auth.error.wrongPassword'))
 
     const tokens = await this.generateTokens(user.id, user.email)
     this.setCookies(tokens.access_token, tokens.refresh_token, response)
@@ -132,11 +140,11 @@ export class AuthService {
   ): Promise<AuthRes> {
     const user = await this.usersService.findUnique('email', data.email)
 
-    if (user.from !== authType)
-      throw new ForbiddenException('This email already exist')
-
     // Аутентификация
     if (user) {
+      if (user.from !== authType)
+        throw new ForbiddenException('This email already exist')
+
       const tokens = await this.generateTokens(user.id, user.email)
       this.setCookies(tokens.access_token, tokens.refresh_token, response)
       return {
@@ -193,7 +201,10 @@ export class AuthService {
     }
   }
 
-  async logout(userId: number, response: Response) {
+  async logout(userId: number, response: Response, dto: LogoutDto) {
+    if (dto.from === AuthTypeEnum.guest) {
+      this.usersService.removeById(userId)
+    }
     response.clearCookie('access_token')
     response.clearCookie('refresh_token')
   }
@@ -205,16 +216,15 @@ export class AuthService {
         throw new UnauthorizedException('Unauthorized!')
       }
 
-      // TODO: типизировать данные токена
-      const userData = this.jwtService.verify(refresh_token, {
+      const tokenData: TokenData = this.jwtService.verify(refresh_token, {
         secret: this.config.get('JWT_SECRET_RT'),
       })
 
-      if (!userData) {
+      if (!tokenData) {
         throw new UnauthorizedException('Unauthorized!')
       }
 
-      const user = await this.usersService.findUnique('id', userData.sub)
+      const user = await this.usersService.findUnique('id', tokenData.sub)
       const tokens = await this.generateTokens(user.id, user.email)
 
       this.setCookies(tokens.access_token, tokens.refresh_token, res)
@@ -225,7 +235,7 @@ export class AuthService {
   }
 
   async emailConfirmation(dto: EmailConfirmDto) {
-    const tokenData = this.jwtService.verify(dto.token, {
+    const tokenData: TokenData = this.jwtService.verify(dto.token, {
       secret: this.config.get('JWT_SECRET_MAIL'),
     })
 
@@ -245,7 +255,7 @@ export class AuthService {
   }
 
   async changePassword(dto: ChangePasswordDto) {
-    const tokenData = this.jwtService.verify(dto.token, {
+    const tokenData: TokenData = this.jwtService.verify(dto.token, {
       secret: this.config.get('JWT_SECRET_RESTORE'),
     })
 

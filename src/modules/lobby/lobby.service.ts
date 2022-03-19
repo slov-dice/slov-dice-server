@@ -48,14 +48,14 @@ export class LobbyService {
     return this.lobbyUsersService.setOnlineByUserId(userId, socketId)
   }
 
-  setUserOffline(socketId: string): LobbyUser | false {
+  setUserOffline(socketId: string): LobbyUser {
     return this.lobbyUsersService.setOffline(socketId)
   }
 
   userLogout(
     roomId: RoomId,
     socketId: SocketId,
-  ): { roomData: RoomResponse | false; userData: LobbyUser | false } {
+  ): { roomData: RoomResponse | false; userData: LobbyUser } {
     let roomData: RoomResponse | false = false
     const userData = this.lobbyUsersService.setOffline(socketId)
 

@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Get,
   Res,
   UseGuards,
 } from '@nestjs/common'
@@ -18,6 +19,7 @@ import {
   RestoreDto,
   EmailConfirmDto,
   ChangePasswordDto,
+  LogoutDto,
 } from './dto/auth.dto'
 import { AuthRes, ThirdPartyUserData } from './types/response.type'
 import { GetCurrentUserId } from 'decorators'
@@ -35,6 +37,19 @@ export class AuthController {
     @Body() dto: SignUpDto,
     @Res({ passthrough: true }) response: Response,
   ): Promise<AuthRes> {
+    // TODO?
+    // Проверку существования пользователя
+    // Если пользователь существует, возвращаем ошибку
+    // Создаём пользователя
+    // ОШИБКА
+    // Создание сессии
+    // ОШИБКА
+    // Добавление в лобби
+    // ОШИБКА
+    // Отправка письма на почту для верификации пользователя
+    // ОШИБКА
+    // Отправляем данные
+
     return this.authService.signUpLocal(dto, response)
   }
 
@@ -50,6 +65,7 @@ export class AuthController {
 
   // Сторонняя авторизация
   @Post('token')
+  @HttpCode(HttpStatus.OK)
   async tokenAuth(
     @Body() dto: ThirdPartyDto,
     @Res({ passthrough: true }) response: Response,
@@ -73,7 +89,8 @@ export class AuthController {
     }
   }
 
-  @Post('guest')
+  @Get('guest')
+  @HttpCode(HttpStatus.OK)
   guestAuth(@Res({ passthrough: true }) response: Response): Promise<AuthRes> {
     return this.authService.guestAuth(response)
   }
@@ -82,10 +99,11 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   logout(
+    @Body() dto: LogoutDto,
     @GetCurrentUserId() userId: number,
     @Res({ passthrough: true }) response: Response,
   ) {
-    return this.authService.logout(userId, response)
+    return this.authService.logout(userId, response, dto)
   }
 
   @Post('refresh')

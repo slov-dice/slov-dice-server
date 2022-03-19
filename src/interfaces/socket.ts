@@ -1,3 +1,16 @@
+import {
+  AccessToken,
+  FullRoom,
+  Lobby,
+  LobbyChat,
+  LobbyUser,
+  PreviewRoom,
+  RoomChat,
+  RoomId,
+  RoomTypeEnum,
+  UserId,
+} from './app'
+
 export enum SubscribeNamespace {
   // Меняет статус пользователя на "онлайн"
   setUserOnline = 'set_user_online',
@@ -22,6 +35,25 @@ export enum SubscribeNamespace {
 
   // Выход из комнаты в комнате
   leaveRoom = 'leave_room',
+}
+
+export interface SubscriptionData {
+  [SubscribeNamespace.setUserOnline]: {
+    userId: UserId
+    accessToken: AccessToken
+  }
+  [SubscribeNamespace.rejoinRoom]: { profileId: UserId; roomId: RoomId }
+  [SubscribeNamespace.leaveRoom]: { roomId: RoomId }
+  [SubscribeNamespace.joinRoom]: { roomId: RoomId; password: string }
+  [SubscribeNamespace.userLogout]: { roomId: RoomId }
+  [SubscribeNamespace.sendMessageLobby]: { message: string }
+  [SubscribeNamespace.createRoom]: {
+    roomName: string
+    roomSize: number
+    roomPassword: string
+    roomType: RoomTypeEnum
+  }
+  [SubscribeNamespace.sendMessageRoom]: { roomId: RoomId; message: string }
 }
 
 export enum EmitNamespace {
@@ -54,4 +86,31 @@ export enum EmitNamespace {
 
   // Пользователь переподключается к комнате
   userRejoinInRoom = 'user_rejoin_in_room',
+}
+
+export interface EmitPayload {
+  [EmitNamespace.getLobby]: { lobby: Lobby }
+  [EmitNamespace.getUser]: { user: LobbyUser }
+  [EmitNamespace.userDisconnected]: { user: LobbyUser }
+  [EmitNamespace.getMessageLobby]: { message: LobbyChat }
+  [EmitNamespace.roomCreated]: {
+    previewRoom: PreviewRoom
+    user: LobbyUser
+  }
+  [EmitNamespace.roomUpdated]: {
+    previewRoom: PreviewRoom
+    user: LobbyUser
+  }
+  [EmitNamespace.inRoomUpdate]: {
+    fullRoom: FullRoom
+  }
+  [EmitNamespace.getMessageRoom]: {
+    message: RoomChat
+  }
+  [EmitNamespace.userRejoinInRoom]: {
+    user: LobbyUser
+  }
+  [EmitNamespace.getFullRoom]: {
+    fullRoom: FullRoom
+  }
 }

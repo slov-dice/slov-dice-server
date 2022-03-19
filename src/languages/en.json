@@ -1,0 +1,10 @@
+{
+    "auth": {
+        "error": {
+            "userExist": "User already exists.",
+            "userNotFound": "User not found.",
+            "userRegisteredByThirdParty": "This mail is registered through an third party.",
+            "wrongPassword": "Wrong password."
+        }
+    }
+}

@@ -1,18 +1,18 @@
 export type Tokens = {
-  access_token: string;
-  refresh_token: string;
-};
+  access_token: string
+  refresh_token: string
+}
 
 export type AuthRes = {
-  id: number;
-  nickname: string;
-  email: string;
-};
+  id: number
+  nickname: string
+  email: string
+}
 
 export type ThirdPartyUserData = {
-  id: string;
-  email: string;
-};
+  id: string
+  email: string
+}
 
 // Ответ от discord.com/api/v6/users/@me
 // type DiscordUserResData = {
