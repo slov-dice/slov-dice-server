@@ -5,7 +5,7 @@ import { LobbyChat, LobbyUser } from 'models/app'
 
 @Injectable()
 export class LobbyChatService {
-  chat: LobbyChat[] = []
+  chat: LobbyChat[] = [{ author: 'xep', authorId: 111, id: '123', text: 'xep' }]
 
   getAll(): LobbyChat[] {
     return this.chat

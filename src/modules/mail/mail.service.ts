@@ -1,7 +1,7 @@
-import { MailerService } from '@nestjs-modules/mailer';
-import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { User } from '@prisma/client';
+import { MailerService } from '@nestjs-modules/mailer'
+import { Injectable } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
+import { User } from '@prisma/client'
 
 @Injectable()
 export class MailService {
@@ -13,7 +13,7 @@ export class MailService {
   async sendUserConfirmation(user: User, token: string) {
     const url = `http://${this.config.get(
       'CLIENT_SERVER',
-    )}/email-confirm?token=${token}`;
+    )}/email-confirm?token=${token}`
 
     await this.mailerService.sendMail({
       to: user.email,
@@ -24,14 +24,10 @@ export class MailService {
         nickname: user.nickname,
         url,
       },
-    });
+    })
   }
 
-  async sendUserRestorePassword(user: User, token: string) {
-    const url = `http://${this.config.get(
-      'CLIENT_SERVER',
-    )}/restore-password?token=${token}`;
-
+  async sendUserRestorePassword(user: User, code: string) {
     await this.mailerService.sendMail({
       to: user.email,
       from: '"Slov Dice" <slov-dice@outlook.com>',
@@ -39,8 +35,8 @@ export class MailService {
       template: 'restore',
       context: {
         nickname: user.nickname,
-        url,
+        code,
       },
-    });
+    })
   }
 }

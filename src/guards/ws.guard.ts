@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config'
 import { JwtService } from '@nestjs/jwt'
 
 import { UsersService } from 'modules/users/users.service'
-import { TokenData } from 'modules/auth/types/tokens.type'
+import { TokenData } from 'modules/auth/models/tokens.type'
 
 @Injectable()
 export class WsGuard implements CanActivate {

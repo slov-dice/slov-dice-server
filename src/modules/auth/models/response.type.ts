@@ -1,15 +1,15 @@
-export type Tokens = {
+export type T_Tokens = {
   access_token: string
   refresh_token: string
 }
 
-export type AuthRes = {
+export type T_AuthResponse = {
   id: number
   nickname: string
   email: string
 }
 
-export type ThirdPartyUserData = {
+export type T_ThirdPartyUserData = {
   id: string
   email: string
 }

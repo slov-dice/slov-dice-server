@@ -1,22 +1,22 @@
 import * as RU from './ru.json'
 import * as EN from './en.json'
-import { LocaleEnum } from 'interfaces/app'
+import { E_Locale, T_LocaleServerMessage } from 'models/app'
 
-const translation = { [LocaleEnum.ru]: RU, [LocaleEnum.en]: EN }
+const translation = { [E_Locale.ru]: RU, [E_Locale.en]: EN }
 
 export const t = (key: string) => {
   const keys = key.split('.')
   return getNestedTranslation(keys)
 }
 
-const getNestedTranslation = (keys: string[]): { RU: string; EN: string } => {
+const getNestedTranslation = (keys: string[]): T_LocaleServerMessage => {
   const RU = keys.reduce((obj: any, key: string) => {
     return obj?.[key]
-  }, translation[LocaleEnum.ru])
+  }, translation[E_Locale.ru])
 
   const EN = keys.reduce((obj: any, key: string) => {
     return obj?.[key]
-  }, translation[LocaleEnum.en])
+  }, translation[E_Locale.en])
 
-  return { [LocaleEnum.ru]: RU, [LocaleEnum.en]: EN }
+  return { [E_Locale.ru]: RU, [E_Locale.en]: EN }
 }

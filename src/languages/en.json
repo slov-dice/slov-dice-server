@@ -1,10 +1,13 @@
 {
-    "auth": {
-        "error": {
-            "userExist": "User already exists.",
-            "userNotFound": "User not found.",
-            "userRegisteredByThirdParty": "This mail is registered through an third party.",
-            "wrongPassword": "Wrong password."
-        }
+  "auth": {
+    "error": {
+      "userExist": "User already exists",
+      "userNotFound": "User not found",
+      "userRegisteredByThirdParty": "This mail is registered through an third party",
+      "wrongPassword": "Wrong password"
+    },
+    "success": {
+      "checkEmail": "Code has been successfully sent to your email!"
     }
+  }
 }

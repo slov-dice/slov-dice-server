@@ -1,3 +1,4 @@
+import { APP_GUARD } from '@nestjs/core'
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
 import { ScheduleModule } from '@nestjs/schedule'
 import { ConfigModule } from '@nestjs/config'
@@ -5,9 +6,9 @@ import { Module } from '@nestjs/common'
 
 import { AuthModule } from 'modules/auth/auth.module'
 import { PrismaModule } from 'modules/prisma/prisma.module'
-import { LobbyModule } from 'modules/lobby/lobby.module'
 import { TasksModule } from 'modules/tasks/tasks.module'
-import { APP_GUARD } from '@nestjs/core'
+import { LobbyChatModule } from 'modules/lobbyChat/lobbyChat.module'
+import { LobbyUsersModule } from 'modules/lobbyUsers/lobbyUsers.module'
 
 @Module({
   imports: [
@@ -20,7 +21,8 @@ import { APP_GUARD } from '@nestjs/core'
     TasksModule,
     AuthModule,
     PrismaModule,
-    LobbyModule,
+    LobbyChatModule,
+    LobbyUsersModule
   ],
   providers: [
     {

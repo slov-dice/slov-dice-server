@@ -1,10 +1,13 @@
 {
-    "auth": {
-        "error": {
-            "userExist": "Пользователь уже существует.",
-            "userNotFound": "Пользователь не найден.",
-            "userRegisteredByThirdParty": "Эта почта зарегистрированная через сторонний сервис.",
-            "wrongPassword": "Неверный пароль."
-        }
+  "auth": {
+    "error": {
+      "userExist": "Пользователь уже существует",
+      "userNotFound": "Пользователь не найден",
+      "userRegisteredByThirdParty": "Эта почта зарегистрированная через сторонний сервис",
+      "wrongPassword": "Неверный пароль"
+    },
+    "success": {
+      "checkEmail": "Код был успешно отправлен на вашу почту!"
     }
+  }
 }

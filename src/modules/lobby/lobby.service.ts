@@ -8,13 +8,13 @@ import { UsersService } from 'modules/users/users.service'
 import type {
   Lobby,
   LobbyUser,
-  UserId,
-  SocketId,
-  RoomId,
+  T_UserId,
+  T_SocketId,
+  T_RoomId,
   LobbyChat,
   RoomTypeEnum,
   RoomChat,
-} from 'interfaces/app'
+} from 'models/app'
 
 @Injectable()
 export class LobbyService {
@@ -44,7 +44,7 @@ export class LobbyService {
     this.lobbyUsersService.create(user)
   }
 
-  setUserOnline(userId: UserId, socketId: SocketId): LobbyUser {
+  setUserOnline(userId: T_UserId, socketId: T_SocketId): LobbyUser {
     return this.lobbyUsersService.setOnlineByUserId(userId, socketId)
   }
 
@@ -53,8 +53,8 @@ export class LobbyService {
   }
 
   userLogout(
-    roomId: RoomId,
-    socketId: SocketId,
+    roomId: T_RoomId,
+    socketId: T_SocketId,
   ): { roomData: RoomResponse | false; userData: LobbyUser } {
     let roomData: RoomResponse | false = false
     const userData = this.lobbyUsersService.setOffline(socketId)
@@ -77,7 +77,7 @@ export class LobbyService {
 
   // Создание комнаты в лобби
   createRoom(
-    socketId: SocketId,
+    socketId: T_SocketId,
     name: string,
     size: number,
     password: string,
@@ -97,8 +97,8 @@ export class LobbyService {
 
   // Вход в комнату
   joinRoom(
-    socketId: SocketId,
-    roomId: RoomId,
+    socketId: T_SocketId,
+    roomId: T_RoomId,
     roomPassword: string,
   ): { roomData: RoomResponse | false; userData: LobbyUser } {
     // TODO: Проверка на статус пользователя "в комнате"
@@ -131,10 +131,10 @@ export class LobbyService {
 
   // Создания сообщения в комнате
   createMessageInRoom(
-    socketId: SocketId,
-    roomId: RoomId,
+    socketId: T_SocketId,
+    roomId: T_RoomId,
     text: string,
-  ): { message: RoomChat; roomId: RoomId } {
+  ): { message: RoomChat; roomId: T_RoomId } {
     const user = this.lobbyUsersService.findBySocketId(socketId)
     const message = this.lobbyRoomsService.createMessage(user, roomId, text)
     return { message, roomId: roomId }

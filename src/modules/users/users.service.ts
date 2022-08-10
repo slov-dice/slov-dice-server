@@ -2,7 +2,7 @@ import { User } from '@prisma/client'
 import { Injectable } from '@nestjs/common'
 
 import { PrismaService } from 'modules/prisma/prisma.service'
-import { AuthTypeEnum } from 'interfaces/app'
+import { E_AuthType } from 'models/app'
 
 @Injectable()
 export class UsersService {
@@ -12,7 +12,7 @@ export class UsersService {
     email: string | null,
     nickname: string,
     hash: string,
-    from: AuthTypeEnum,
+    from: E_AuthType,
   ): Promise<User> {
     return await this.prisma.user.create({
       data: {
@@ -80,7 +80,7 @@ export class UsersService {
       where: {
         AND: [
           {
-            from: AuthTypeEnum.guest,
+            from: E_AuthType.guest,
             created_at: { lt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7) },
           },
         ],

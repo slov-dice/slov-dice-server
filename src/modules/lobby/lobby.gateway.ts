@@ -15,8 +15,7 @@ import {
   EmitPayload,
   SubscribeNamespace,
   SubscriptionData,
-} from 'interfaces/socket'
-import { RoomId, UserId } from 'interfaces/app'
+} from 'models/socket'
 import { WsGuard } from 'guards/ws.guard'
 import { WsThrottlerGuard } from 'guards/wsThrottler.guard'
 
@@ -43,26 +42,26 @@ export class LobbyGateway
   }
 
   // Делаем пользователя онлайн, после успешной авторизации
-  @UseGuards(WsGuard)
-  @SubscribeMessage(SubscribeNamespace.setUserOnline)
-  setUserOnline(
-    client: Socket,
-    data: SubscriptionData[SubscribeNamespace.setUserOnline],
-  ) {
-    const getLobbyPayload: EmitPayload[EmitNamespace.getLobby] = {
-      lobby: this.lobby.getLobby(),
-    }
+  // @UseGuards(WsGuard)
+  // @SubscribeMessage(SubscribeNamespace.setUserOnline)
+  // setUserOnline(
+  //   client: Socket,
+  //   data: SubscriptionData[SubscribeNamespace.setUserOnline],
+  // ) {
+  //   const getLobbyPayload: EmitPayload[EmitNamespace.getLobby] = {
+  //     lobby: this.lobby.getLobby(),
+  //   }
 
-    const getUserPayload: EmitPayload[EmitNamespace.getUser] = {
-      user: this.lobby.setUserOnline(data.userId, client.id),
-    }
+  //   const getUserPayload: EmitPayload[EmitNamespace.getUser] = {
+  //     user: this.lobby.setUserOnline(data.userId, client.id),
+  //   }
 
-    // Отправка лобби ОТПРАВИТЕЛЮ
-    client.emit(EmitNamespace.getLobby, getLobbyPayload)
+  //   // Отправка лобби ОТПРАВИТЕЛЮ
+  //   client.emit(EmitNamespace.getLobby, getLobbyPayload)
 
-    // Отправка нового клиента ВСЕМ, кроме ОТПРАВИТЕЛЯ
-    client.broadcast.emit(EmitNamespace.getUser, getUserPayload)
-  }
+  //   // Отправка нового клиента ВСЕМ, кроме ОТПРАВИТЕЛЯ
+  //   client.broadcast.emit(EmitNamespace.getUser, getUserPayload)
+  // }
 
   // Отключение сокета
   handleDisconnect(client: Socket) {
@@ -87,60 +86,47 @@ export class LobbyGateway
 
   // Отключаем пользователя от комнаты и делаем его оффлайн,
   // если пользователь выходит из профиля
-  @SubscribeMessage(SubscribeNamespace.userLogout)
-  userLogout(
-    client: Socket,
-    data: SubscriptionData[SubscribeNamespace.userLogout],
-  ) {
-    const { roomData, userData } = this.lobby.userLogout(data.roomId, client.id)
+  // @SubscribeMessage(SubscribeNamespace.userLogout)
+  // userLogout(
+  //   client: Socket,
+  //   data: SubscriptionData[SubscribeNamespace.userLogout],
+  // ) {
+  //   const { roomData, userData } = this.lobby.userLogout(data.roomId, client.id)
 
-    if (roomData) {
-      const { fullRoom, previewRoom } = roomData
+  //   if (roomData) {
+  //     const { fullRoom, previewRoom } = roomData
 
-      // Отключаем ОТПРАВИТЕЛЯ от комнаты
-      client.leave(fullRoom.id)
+  //     // Отключаем ОТПРАВИТЕЛЯ от комнаты
+  //     client.leave(fullRoom.id)
 
-      // Отправляем превью комнаты ВСЕМ
-      const roomUpdatedPayload: EmitPayload[EmitNamespace.roomUpdated] = {
-        previewRoom,
-        user: userData,
-      }
-      this.server.emit(EmitNamespace.roomUpdated, roomUpdatedPayload)
+  //     // Отправляем превью комнаты ВСЕМ
+  //     const roomUpdatedPayload: EmitPayload[EmitNamespace.roomUpdated] = {
+  //       previewRoom,
+  //       user: userData,
+  //     }
+  //     this.server.emit(EmitNamespace.roomUpdated, roomUpdatedPayload)
 
-      // Отправляем полную комнату ВСЕМ кроме ОТПРАВИТЕЛЯ в комнату
-      const inRoomUpdatePayload: EmitPayload[EmitNamespace.inRoomUpdate] = {
-        fullRoom,
-      }
-      client.broadcast
-        .to(fullRoom.id)
-        .emit(EmitNamespace.inRoomUpdate, inRoomUpdatePayload)
-    }
+  //     // Отправляем полную комнату ВСЕМ кроме ОТПРАВИТЕЛЯ в комнату
+  //     const inRoomUpdatePayload: EmitPayload[EmitNamespace.inRoomUpdate] = {
+  //       fullRoom,
+  //     }
+  //     client.broadcast
+  //       .to(fullRoom.id)
+  //       .emit(EmitNamespace.inRoomUpdate, inRoomUpdatePayload)
+  //   }
 
-    if (userData) {
-      // Отправка отключённого юзера ВСЕМ, кроме отправителя
-      const userDisconnectedPayload: EmitPayload[EmitNamespace.userDisconnected] =
-        {
-          user: userData,
-        }
-      client.broadcast.emit(
-        EmitNamespace.userDisconnected,
-        userDisconnectedPayload,
-      )
-    }
-  }
-
-  // Добавление и отправка нового сообщения в лобби
-  @UseGuards(WsThrottlerGuard)
-  @SubscribeMessage(SubscribeNamespace.sendMessageLobby)
-  sendMessageLobby(
-    client: Socket,
-    data: SubscriptionData[SubscribeNamespace.sendMessageLobby],
-  ) {
-    const getMessageLobbyPayload: EmitPayload[EmitNamespace.getMessageLobby] = {
-      message: this.lobby.createLobbyMessage(client.id, data.message),
-    }
-    this.server.emit(EmitNamespace.getMessageLobby, getMessageLobbyPayload)
-  }
+  //   if (userData) {
+  //     // Отправка отключённого юзера ВСЕМ, кроме отправителя
+  //     const userDisconnectedPayload: EmitPayload[EmitNamespace.userDisconnected] =
+  //       {
+  //         user: userData,
+  //       }
+  //     client.broadcast.emit(
+  //       EmitNamespace.userDisconnected,
+  //       userDisconnectedPayload,
+  //     )
+  //   }
+  // }
 
   // Создание и отправка комнаты
   @SubscribeMessage(SubscribeNamespace.createRoom)

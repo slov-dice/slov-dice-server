@@ -21,13 +21,17 @@ import {
   ChangePasswordDto,
   LogoutDto,
 } from './dto/auth.dto'
-import { AuthRes, ThirdPartyUserData, Tokens } from './types/response.type'
-import { TokenParams } from './types/params.type'
-import { TokenData } from './types/tokens.type'
-import { LobbyService } from 'modules/lobby/lobby.service'
+import {
+  T_AuthResponse,
+  T_ThirdPartyUserData,
+  T_Tokens,
+} from './models/response.type'
+import { TokenParams } from './models/params.type'
+import { TokenData } from './models/tokens.type'
 import { UsersService } from 'modules/users/users.service'
 import { MailService } from 'modules/mail/mail.service'
-import { AuthTypeEnum } from 'interfaces/app'
+import { LobbyUsersService } from 'modules/lobbyUsers/lobbyUsers.service'
+import { E_AuthType } from 'models/app'
 import { t } from 'languages'
 
 @Injectable()
@@ -35,18 +39,22 @@ export class AuthService {
   constructor(
     private jwtService: JwtService,
     private config: ConfigService,
-    private lobby: LobbyService,
+    private lobbyUsers: LobbyUsersService,
     private httpService: HttpService,
     private usersService: UsersService,
     private mailService: MailService,
   ) {}
 
-  async signUpLocal(dto: SignUpDto, response: Response): Promise<AuthRes> {
+  async signUpLocal(
+    dto: SignUpDto,
+    response: Response,
+  ): Promise<T_AuthResponse> {
     const userExists = await this.usersService.findOneByEmailAndNickname(
       dto.email,
       dto.nickname,
     )
 
+    // Если пользователь найден
     if (userExists) throw new ForbiddenException(t('auth.error.userExist'))
 
     const hashedPassword = await this.hashData(dto.password)
@@ -54,14 +62,14 @@ export class AuthService {
       dto.email,
       dto.nickname,
       hashedPassword,
-      AuthTypeEnum.email,
+      E_AuthType.email,
     )
 
     const tokens = await this.generateTokens(user.id, user.email)
     this.setCookies(tokens.access_token, tokens.refresh_token, response)
 
     // Добавление сокета
-    this.lobby.createRegisteredUser(user)
+    this.lobbyUsers.create(user)
 
     // Email верификация
     const verifyToken = await this.generateMailToken(user.id, user.email)
@@ -70,14 +78,17 @@ export class AuthService {
     return { id: user.id, nickname: user.nickname, email: user.email }
   }
 
-  async signInLocal(dto: SignInDto, response: Response): Promise<AuthRes> {
+  async signInLocal(
+    dto: SignInDto,
+    response: Response,
+  ): Promise<T_AuthResponse> {
     const user = await this.usersService.findUnique('email', dto.email)
 
     // Если пользователь не найден
     if (!user) throw new ForbiddenException(t('auth.error.userNotFound'))
 
     // Если пользователь зарегистрирован через сторонний сервис
-    if (user.from !== AuthTypeEnum.email)
+    if (user.from !== E_AuthType.email)
       throw new ForbiddenException(t('auth.error.userRegisteredByThirdParty'))
 
     const passwordMatches = await argon2.verify(user.hash, dto.password)
@@ -119,7 +130,7 @@ export class AuthService {
   }
 
   async getDataFromThirdParty(
-    authType: AuthTypeEnum,
+    authType: E_AuthType,
     access_token: string,
   ): Promise<AxiosResponse<any, any>> {
     const url = this.getDataUrlThirdParty(authType)
@@ -134,10 +145,10 @@ export class AuthService {
   }
 
   async authByThirdParty(
-    authType: AuthTypeEnum,
-    data: ThirdPartyUserData,
+    authType: E_AuthType,
+    data: T_ThirdPartyUserData,
     response: Response,
-  ): Promise<AuthRes> {
+  ): Promise<T_AuthResponse> {
     const user = await this.usersService.findUnique('email', data.email)
 
     // Аутентификация
@@ -169,7 +180,7 @@ export class AuthService {
         createdUser.email,
       )
       this.setCookies(tokens.access_token, tokens.refresh_token, response)
-      this.lobby.createRegisteredUser(createdUser)
+      this.lobbyUsers.create(createdUser)
 
       return {
         id: createdUser.id,
@@ -182,17 +193,18 @@ export class AuthService {
   async guestAuth(response: Response) {
     const totalCount = await this.usersService.getTotalUsersCount()
     const nickname = `Player-${totalCount}`
+    console.log('totalCount', totalCount)
 
     const user = await this.usersService.create(
       null,
       nickname,
       '',
-      AuthTypeEnum.guest,
+      E_AuthType.guest,
     )
 
     const tokens = await this.generateTokens(user.id, user.email)
     this.setCookies(tokens.access_token, tokens.refresh_token, response)
-    this.lobby.createRegisteredUser(user)
+    this.lobbyUsers.create(user)
 
     return {
       id: user.id,
@@ -202,7 +214,7 @@ export class AuthService {
   }
 
   async logout(userId: number, response: Response, dto: LogoutDto) {
-    if (dto.from === AuthTypeEnum.guest) {
+    if (dto.from === E_AuthType.guest) {
       this.usersService.removeById(userId)
     }
     response.clearCookie('access_token')
@@ -241,17 +253,8 @@ export class AuthService {
 
     const user = await this.usersService.verifyEmail(tokenData.email)
 
-    if (!user) throw new NotFoundException('User does not exist')
+    if (!user) throw new NotFoundException(t('auth.error.userNotFound'))
     if (!user.verified) throw new NotFoundException('Failed to verify email')
-  }
-
-  async restore(dto: RestoreDto) {
-    const user = await this.usersService.findUnique('email', dto.email)
-
-    if (!user) throw new ForbiddenException('User does not exist')
-
-    const restoreToken = await this.generateRestoreToken(user.id, user.email)
-    this.mailService.sendUserRestorePassword(user, restoreToken)
   }
 
   async changePassword(dto: ChangePasswordDto) {
@@ -292,7 +295,7 @@ export class AuthService {
     })
   }
 
-  async generateTokens(userId: number, email: string): Promise<Tokens> {
+  async generateTokens(userId: number, email: string): Promise<T_Tokens> {
     const [at, rt] = await Promise.all([
       this.jwtService.signAsync(
         {
@@ -348,20 +351,20 @@ export class AuthService {
     )
   }
 
-  getTokenUrlThirdParty(authType: AuthTypeEnum): string {
+  getTokenUrlThirdParty(authType: E_AuthType): string {
     switch (authType) {
-      case AuthTypeEnum.discord:
+      case E_AuthType.discord:
         return 'https://discord.com/api/oauth2/token'
-      case AuthTypeEnum.google:
+      case E_AuthType.google:
         return 'https://oauth2.googleapis.com/token'
     }
   }
 
-  getDataUrlThirdParty(authType: AuthTypeEnum): string {
+  getDataUrlThirdParty(authType: E_AuthType): string {
     switch (authType) {
-      case AuthTypeEnum.discord:
+      case E_AuthType.discord:
         return 'https://discord.com/api/v6/users/@me'
-      case AuthTypeEnum.google:
+      case E_AuthType.google:
         return 'https://www.googleapis.com/oauth2/v2/userinfo'
     }
   }

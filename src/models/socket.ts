@@ -1,25 +1,32 @@
 import {
-  AccessToken,
+  T_AccessToken,
   FullRoom,
-  Lobby,
   LobbyChat,
   LobbyUser,
   PreviewRoom,
   RoomChat,
-  RoomId,
+  T_RoomId,
   RoomTypeEnum,
-  UserId,
+  T_UserId,
 } from './app'
 
 export enum SubscribeNamespace {
+  // CHAT
+  // Запрос на получение всех сообщений в лобби
+  requestAllMessagesLobby = 'request_all_messages_lobby',
+
+  // Отправка сообщения в лобби
+  sendMessageLobby = 'send_message_lobby',
+
+  // USERS
+  // Запрос на получение всех пользователей в лобби
+  requestAllUsersLobby = 'request_all_users_lobby',
+
   // Меняет статус пользователя на "онлайн"
   setUserOnline = 'set_user_online',
 
   // Выход юзера из профиля
-  userLogout = 'user_logout',
-
-  // Отправка сообщения в лобби
-  sendMessageLobby = 'send_message_lobby',
+  requestUserLogout = 'request_user_logout',
 
   // Отправка сообщения в комнате
   sendMessageRoom = 'send_message_room',
@@ -38,30 +45,44 @@ export enum SubscribeNamespace {
 }
 
 export interface SubscriptionData {
+  // CHAT
+  [SubscribeNamespace.requestAllMessagesLobby]: { accessToken: T_AccessToken }
+  [SubscribeNamespace.sendMessageLobby]: { text: string }
+
+  // USERS
+  [SubscribeNamespace.requestAllUsersLobby]: { accessToken: T_AccessToken }
   [SubscribeNamespace.setUserOnline]: {
-    userId: UserId
-    accessToken: AccessToken
+    userId: T_UserId
+    accessToken: T_AccessToken
   }
-  [SubscribeNamespace.rejoinRoom]: { profileId: UserId; roomId: RoomId }
-  [SubscribeNamespace.leaveRoom]: { roomId: RoomId }
-  [SubscribeNamespace.joinRoom]: { roomId: RoomId; password: string }
-  [SubscribeNamespace.userLogout]: { roomId: RoomId }
-  [SubscribeNamespace.sendMessageLobby]: { message: string }
+  [SubscribeNamespace.requestUserLogout]: { roomId: T_RoomId }
+
+  [SubscribeNamespace.rejoinRoom]: { profileId: T_UserId; roomId: T_RoomId }
+  [SubscribeNamespace.leaveRoom]: { roomId: T_RoomId }
+  [SubscribeNamespace.joinRoom]: { roomId: T_RoomId; password: string }
   [SubscribeNamespace.createRoom]: {
     roomName: string
     roomSize: number
     roomPassword: string
     roomType: RoomTypeEnum
   }
-  [SubscribeNamespace.sendMessageRoom]: { roomId: RoomId; message: string }
+  [SubscribeNamespace.sendMessageRoom]: { roomId: T_RoomId; message: string }
 }
 
 export enum EmitNamespace {
-  // Получение лобби
-  getLobby = 'get_lobby',
+  // CHAT
+  // Получение всех сообщений в лобби
+  getAllMessagesLobby = 'get_all_messages_lobby',
+
+  // Получение нового сообщения в лобби
+  getMessageLobby = 'get_message_lobby',
+
+  // USERS
+  // Поучение всех пользователей в лобби
+  getAllUsersLobby = 'get_all_users_lobby',
 
   // Получение пользователя
-  getUser = 'get_user',
+  getUserLobby = 'get_user_lobby',
 
   // Пользователь отключился
   userDisconnected = 'user_disconnected',
@@ -71,9 +92,6 @@ export enum EmitNamespace {
 
   // Обновление внутри комнаты
   inRoomUpdate = 'in_room_update',
-
-  // Получение сообщения в лобби
-  getMessageLobby = 'get_message_lobby',
 
   // Получение новой комнаты в лобби
   roomCreated = 'room_created',
@@ -89,10 +107,15 @@ export enum EmitNamespace {
 }
 
 export interface EmitPayload {
-  [EmitNamespace.getLobby]: { lobby: Lobby }
-  [EmitNamespace.getUser]: { user: LobbyUser }
-  [EmitNamespace.userDisconnected]: { user: LobbyUser }
+  // CHAT
+  [EmitNamespace.getAllMessagesLobby]: { chat: LobbyChat[] }
   [EmitNamespace.getMessageLobby]: { message: LobbyChat }
+
+  // USERS
+  [EmitNamespace.getAllUsersLobby]: { users: LobbyUser[] }
+  [EmitNamespace.getUserLobby]: { user: LobbyUser }
+
+  [EmitNamespace.userDisconnected]: { user: LobbyUser }
   [EmitNamespace.roomCreated]: {
     previewRoom: PreviewRoom
     user: LobbyUser

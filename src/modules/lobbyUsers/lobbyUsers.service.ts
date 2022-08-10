@@ -7,13 +7,17 @@ import { LobbyUser, T_SocketId, T_UserId, UserStatusEnum } from 'models/app'
 export class LobbyUsersService {
   users: LobbyUser[] = []
 
-  initUsers(users: User[] = []) {
-    this.users = users.map((user) => ({
-      id: user.id,
-      nickname: user.nickname,
-      socketId: '',
-      status: UserStatusEnum.offline,
-    }))
+  initUsers(usersDB: User[]) {
+    this.users = usersDB.map(
+      (user): LobbyUser => ({
+        id: user.id,
+        nickname: user.nickname,
+        socketId: '',
+        status: UserStatusEnum.offline,
+      }),
+    )
+
+    console.log('user init', this.users)
   }
 
   getAll(): LobbyUser[] {
@@ -44,20 +48,10 @@ export class LobbyUsersService {
     return this.users[userIndex]
   }
 
-  setOnlineBySocketId(socketId: T_SocketId): LobbyUser {
+  setOfflineBySocketId(socketId: T_SocketId): LobbyUser | false {
     const userIndex = this.findIndexBySocketId(socketId)
 
-    this.users[userIndex] = {
-      ...this.users[userIndex],
-      status: UserStatusEnum.online,
-    }
-
-    return this.users[userIndex]
-  }
-
-  // Меняет статус пользователя на оффлайн и убирает socketId
-  setOffline(socketId: T_SocketId): LobbyUser {
-    const userIndex = this.findIndexBySocketId(socketId)
+    if (userIndex === -1) return false
 
     this.users[userIndex] = {
       ...this.users[userIndex],
@@ -68,26 +62,15 @@ export class LobbyUsersService {
     return this.users[userIndex]
   }
 
-  setInRoom(socketId: T_SocketId): LobbyUser {
-    const userIndex = this.findIndexBySocketId(socketId)
-
-    this.users[userIndex] = {
-      ...this.users[userIndex],
-      status: UserStatusEnum.inRoom,
-    }
-
-    return this.users[userIndex]
-  }
-
-  findBySocketId(socketId: T_SocketId): LobbyUser {
-    return this.users.find((user) => user.socketId === socketId)
-  }
-
   findIndexByUserId(userId: T_UserId): number {
     return this.users.findIndex((user) => user.id === userId)
   }
 
   findIndexBySocketId(socketId: T_SocketId): number {
     return this.users.findIndex((user) => user.socketId === socketId)
+  }
+
+  findBySocketId(socketId: T_SocketId): LobbyUser {
+    return this.users.find((user) => user.socketId === socketId)
   }
 }

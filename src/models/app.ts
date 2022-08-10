@@ -1,7 +1,7 @@
-export type SocketId = string
-export type UserId = number
-export type RoomId = string
-export type AccessToken = string
+export type T_SocketId = string
+export type T_UserId = number
+export type T_RoomId = string
+export type T_AccessToken = string
 
 export enum UserStatusEnum {
   offline = 'offline',
@@ -16,19 +16,21 @@ export enum RoomMessageTypeEnum {
   custom = 'custom',
   command = 'command',
 }
-export enum AuthTypeEnum {
+export enum E_AuthType {
   email = 'EMAIL',
   google = 'GOOGLE',
   discord = 'DISCORD',
   guest = 'GUEST',
 }
-export enum LocaleEnum {
+export enum E_Locale {
   ru = 'RU',
   en = 'EN',
 }
 
+export type T_LocaleServerMessage = Record<E_Locale, string>
+
 export interface Profile {
-  id: UserId
+  id: T_UserId
   email: string
   nickname: string
   statuses: {
@@ -44,34 +46,34 @@ export interface Lobby {
 }
 
 export interface LobbyUser {
-  socketId: SocketId
-  id: UserId
+  socketId: T_SocketId
+  id: T_UserId
   nickname: string
   status: UserStatusEnum
 }
 
 export interface LobbyChat {
   id: string
-  authorId: UserId
+  authorId: T_UserId
   author: string
   text: string
 }
 
 export interface RoomUser {
-  [id: UserId]: SocketId
+  [id: T_UserId]: T_SocketId
 }
 
 export interface RoomChat {
   id: string
-  authorId: UserId
+  authorId: T_UserId
   author: string
   text: string
   type: RoomMessageTypeEnum
 }
 
 export interface PreviewRoom {
-  id: RoomId
-  authorId: UserId
+  id: T_RoomId
+  authorId: T_UserId
   name: string
   size: number
   currentSize: number

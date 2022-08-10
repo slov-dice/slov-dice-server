@@ -21,9 +21,9 @@ import {
   ChangePasswordDto,
   LogoutDto,
 } from './dto/auth.dto'
-import { AuthRes, ThirdPartyUserData } from './types/response.type'
-import { GetCurrentUserId } from 'decorators'
-import { GetReqRT } from 'decorators/get-req-rt.decorator'
+import { T_AuthResponse, T_ThirdPartyUserData } from './models/response.type'
+
+import { GetCurrentUserId, GetReqRT } from 'decorators'
 import { AtGuard } from 'guards'
 
 @Controller('auth')
@@ -36,20 +36,7 @@ export class AuthController {
   signUpLocal(
     @Body() dto: SignUpDto,
     @Res({ passthrough: true }) response: Response,
-  ): Promise<AuthRes> {
-    // TODO?
-    // Проверку существования пользователя
-    // Если пользователь существует, возвращаем ошибку
-    // Создаём пользователя
-    // ОШИБКА
-    // Создание сессии
-    // ОШИБКА
-    // Добавление в лобби
-    // ОШИБКА
-    // Отправка письма на почту для верификации пользователя
-    // ОШИБКА
-    // Отправляем данные
-
+  ): Promise<T_AuthResponse> {
     return this.authService.signUpLocal(dto, response)
   }
 
@@ -59,7 +46,7 @@ export class AuthController {
   signInLocal(
     @Body() dto: SignInDto,
     @Res({ passthrough: true }) response: Response,
-  ): Promise<AuthRes> {
+  ): Promise<T_AuthResponse> {
     return this.authService.signInLocal(dto, response)
   }
 
@@ -69,7 +56,7 @@ export class AuthController {
   async tokenAuth(
     @Body() dto: ThirdPartyDto,
     @Res({ passthrough: true }) response: Response,
-  ): Promise<AuthRes> {
+  ): Promise<T_AuthResponse> {
     try {
       // Получаем токен пользователя с помощью кода
       const responseToken = await this.authService.getTokenFromThirdParty(dto)
@@ -80,7 +67,7 @@ export class AuthController {
         responseToken.data.access_token,
       )
 
-      const userData: ThirdPartyUserData = responseUser.data
+      const userData: T_ThirdPartyUserData = responseUser.data
 
       // Регистрируем или аутентифицируем юзера
       return this.authService.authByThirdParty(dto.authType, userData, response)
@@ -89,12 +76,16 @@ export class AuthController {
     }
   }
 
+  // Авторизация гостем
   @Get('guest')
   @HttpCode(HttpStatus.OK)
-  guestAuth(@Res({ passthrough: true }) response: Response): Promise<AuthRes> {
+  guestAuth(
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<T_AuthResponse> {
     return this.authService.guestAuth(response)
   }
 
+  // Выход из системы, удаляем все токены пользователя
   @UseGuards(AtGuard)
   @Post('logout')
   @HttpCode(HttpStatus.OK)
@@ -106,6 +97,7 @@ export class AuthController {
     return this.authService.logout(userId, response, dto)
   }
 
+  // Обновление access_token
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   refreshTokens(
@@ -115,18 +107,14 @@ export class AuthController {
     return this.authService.refreshTokens(rt, response)
   }
 
+  // Верификация почты
   @Post('confirm')
   @HttpCode(HttpStatus.OK)
   emailConfirmation(@Body() dto: EmailConfirmDto) {
     return this.authService.emailConfirmation(dto)
   }
 
-  @Post('restore')
-  @HttpCode(HttpStatus.OK)
-  restorePassword(@Body() dto: RestoreDto) {
-    return this.authService.restore(dto)
-  }
-
+  // Изменение пароля
   @Post('change/password')
   @HttpCode(HttpStatus.OK)
   changePassword(@Body() dto: ChangePasswordDto) {

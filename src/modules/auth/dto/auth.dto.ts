@@ -1,6 +1,6 @@
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator'
 
-import { AuthTypeEnum } from 'interfaces/app'
+import { E_AuthType } from 'models/app'
 
 export class SignUpDto {
   @IsEmail()
@@ -33,7 +33,7 @@ export class ThirdPartyDto {
 
   @IsString()
   @IsNotEmpty()
-  authType: AuthTypeEnum
+  authType: E_AuthType
 }
 
 export class EmailConfirmDto {
@@ -61,5 +61,5 @@ export class ChangePasswordDto {
 export class LogoutDto {
   @IsString()
   @IsNotEmpty()
-  from: AuthTypeEnum
+  from: E_AuthType
 }
