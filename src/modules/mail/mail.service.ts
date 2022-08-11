@@ -11,9 +11,9 @@ export class MailService {
   ) {}
 
   async sendUserConfirmation(user: User, token: string) {
-    const url = `http://${this.config.get(
+    const url = `${this.config.get(
       'CLIENT_SERVER',
-    )}/email-confirm?token=${token}`
+    )}/verification?token=${token}`
 
     await this.mailerService.sendMail({
       to: user.email,

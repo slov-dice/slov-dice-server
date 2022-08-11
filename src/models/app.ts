@@ -29,6 +29,12 @@ export enum E_Locale {
 
 export type T_LocaleServerMessage = Record<E_Locale, string>
 
+export enum E_StatusServerMessage {
+  success = 'success',
+  error = 'error',
+  info = 'info',
+}
+
 export interface Profile {
   id: T_UserId
   email: string

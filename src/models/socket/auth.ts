@@ -1,8 +1,8 @@
-import { T_LocaleServerMessage } from 'models/app'
+import { E_StatusServerMessage, T_LocaleServerMessage } from 'models/app'
 
 export type T_RestoreData = {
   message: T_LocaleServerMessage
-  isSuccess: boolean
+  status: E_StatusServerMessage
 }
 
 export enum E_AuthSubscribe {

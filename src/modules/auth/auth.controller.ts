@@ -16,7 +16,6 @@ import {
   SignUpDto,
   SignInDto,
   ThirdPartyDto,
-  RestoreDto,
   EmailConfirmDto,
   ChangePasswordDto,
   LogoutDto,

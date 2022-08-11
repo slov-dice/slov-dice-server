@@ -11,7 +11,7 @@ import { Socket, Server } from 'socket.io'
 
 import { UsersService } from 'modules/users/users.service'
 import { MailService } from 'modules/mail/mail.service'
-import { E_AuthType, T_SocketId } from 'models/app'
+import { E_AuthType, E_StatusServerMessage, T_SocketId } from 'models/app'
 import {
   E_AuthEmit,
   E_AuthSubscribe,
@@ -46,6 +46,12 @@ export class AuthGateway
 
   handleDisconnect(client: Socket) {
     this.logger.log(`Client disconnected: ${client.id}`)
+
+    // Если пользователь запрашивал код восстановления
+    if (this.restoreSessions[client.id]) {
+      // Удаляем его из списка сессий
+      delete this.restoreSessions[client.id]
+    }
   }
 
   // Проверка почты и отправка кода для восстановления пароля
@@ -57,7 +63,7 @@ export class AuthGateway
     const user = await this.usersService.findUnique('email', data.email)
     const payload: I_SubscriptionData[E_AuthSubscribe.getRestoreCheckEmail] = {
       message: { EN: '', RU: '' },
-      isSuccess: false,
+      status: E_StatusServerMessage.error,
     }
 
     // Если пользователь не найден
@@ -70,6 +76,21 @@ export class AuthGateway
     // Если пользователь не зарегистрирован по email
     if (user.from !== E_AuthType.email) {
       payload.message = t('auth.error.userRegisteredByThirdParty')
+      client.emit(E_AuthSubscribe.getRestoreCheckEmail, payload)
+      return
+    }
+
+    // Если почта не верифицирована
+    if (!user.verified) {
+      payload.message = t('auth.error.mailNotVerified')
+      client.emit(E_AuthSubscribe.getRestoreCheckEmail, payload)
+      return
+    }
+
+    // Если пользователь уже запрашивал код
+    if (this.restoreSessions[client.id]) {
+      payload.message = t('auth.info.resetCodeWasSended')
+      payload.status = E_StatusServerMessage.info
       client.emit(E_AuthSubscribe.getRestoreCheckEmail, payload)
       return
     }
@@ -87,7 +108,7 @@ export class AuthGateway
     this.mailService.sendUserRestorePassword(user, code)
 
     // Оповещаем юзера об успешной отправке
-    payload.isSuccess = true
+    payload.status = E_StatusServerMessage.success
     payload.message = t('auth.success.checkEmail')
     client.emit(E_AuthSubscribe.getRestoreCheckEmail, payload)
 

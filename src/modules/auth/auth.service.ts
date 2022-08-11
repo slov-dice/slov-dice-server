@@ -17,7 +17,6 @@ import {
   SignInDto,
   ThirdPartyDto,
   EmailConfirmDto,
-  RestoreDto,
   ChangePasswordDto,
   LogoutDto,
 } from './dto/auth.dto'
@@ -45,6 +44,7 @@ export class AuthService {
     private mailService: MailService,
   ) {}
 
+  // Регистрация
   async signUpLocal(
     dto: SignUpDto,
     response: Response,
@@ -78,6 +78,7 @@ export class AuthService {
     return { id: user.id, nickname: user.nickname, email: user.email }
   }
 
+  // Аутентификация
   async signInLocal(
     dto: SignInDto,
     response: Response,
@@ -107,6 +108,7 @@ export class AuthService {
     }
   }
 
+  // Сторонняя авторизация, получение токена
   async getTokenFromThirdParty(
     dto: ThirdPartyDto,
   ): Promise<AxiosResponse<any, any>> {
@@ -129,6 +131,7 @@ export class AuthService {
     )
   }
 
+  // Сторонняя авторизация, получение пользователя
   async getDataFromThirdParty(
     authType: E_AuthType,
     access_token: string,
@@ -144,6 +147,7 @@ export class AuthService {
     return await lastValueFrom(this.httpService.get(url, config))
   }
 
+  // Сторонняя авторизация, авторизация пользователя
   async authByThirdParty(
     authType: E_AuthType,
     data: T_ThirdPartyUserData,
@@ -247,9 +251,14 @@ export class AuthService {
   }
 
   async emailConfirmation(dto: EmailConfirmDto) {
-    const tokenData: TokenData = this.jwtService.verify(dto.token, {
-      secret: this.config.get('JWT_SECRET_MAIL'),
-    })
+    let tokenData: TokenData
+    try {
+      tokenData = this.jwtService.verify(dto.token, {
+        secret: this.config.get('JWT_SECRET_MAIL'),
+      })
+    } catch (error) {
+      throw new ForbiddenException('Token is not valid!')
+    }
 
     const user = await this.usersService.verifyEmail(tokenData.email)
 
@@ -258,11 +267,14 @@ export class AuthService {
   }
 
   async changePassword(dto: ChangePasswordDto) {
-    const tokenData: TokenData = this.jwtService.verify(dto.token, {
-      secret: this.config.get('JWT_SECRET_RESTORE'),
-    })
-
-    if (!tokenData) throw new ForbiddenException('Token is not valid!')
+    let tokenData: TokenData
+    try {
+      tokenData = this.jwtService.verify(dto.token, {
+        secret: this.config.get('JWT_SECRET_RESTORE'),
+      })
+    } catch (error) {
+      // throw new ForbiddenException('Token is not valid!')
+    }
 
     const user = await this.usersService.findUnique('email', tokenData.email)
 
@@ -323,19 +335,6 @@ export class AuthService {
       access_token: at,
       refresh_token: rt,
     }
-  }
-
-  async generateRestoreToken(userId: number, email: string): Promise<string> {
-    return await this.jwtService.signAsync(
-      {
-        sub: userId,
-        email,
-      },
-      {
-        secret: this.config.get('JWT_SECRET_RESTORE'),
-        expiresIn: 60 * 60, // 1 час
-      },
-    )
   }
 
   async generateMailToken(userId: number, email: string): Promise<string> {

@@ -42,12 +42,6 @@ export class EmailConfirmDto {
   token: string
 }
 
-export class RestoreDto {
-  @IsEmail()
-  @IsNotEmpty()
-  email: string
-}
-
 export class ChangePasswordDto {
   @IsString()
   @IsNotEmpty()
