@@ -10,12 +10,12 @@ export class MailService {
     private config: ConfigService,
   ) {}
 
-  async sendUserConfirmation(user: User, token: string) {
+  sendUserConfirmation(user: User, token: string) {
     const url = `${this.config.get(
       'CLIENT_SERVER',
     )}/verification?token=${token}`
 
-    await this.mailerService.sendMail({
+    return this.mailerService.sendMail({
       to: user.email,
       from: '"Slov Dice" <slov-dice@outlook.com>',
       subject: 'Добро пожаловать! Подтвердите свою почту.',
@@ -27,8 +27,8 @@ export class MailService {
     })
   }
 
-  async sendUserRestorePassword(user: User, code: string) {
-    await this.mailerService.sendMail({
+  sendUserRestorePassword(user: User, code: string) {
+    return this.mailerService.sendMail({
       to: user.email,
       from: '"Slov Dice" <slov-dice@outlook.com>',
       subject: 'Восстановление пароля.',

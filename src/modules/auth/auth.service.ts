@@ -57,7 +57,7 @@ export class AuthService {
     // Если пользователь найден
     if (userExists) throw new ForbiddenException(t('auth.error.userExist'))
 
-    const hashedPassword = await this.hashData(dto.password)
+    const hashedPassword = await argon2.hash(dto.password)
     const user = await this.usersService.create(
       dto.email,
       dto.nickname,
@@ -264,36 +264,6 @@ export class AuthService {
 
     if (!user) throw new NotFoundException(t('auth.error.userNotFound'))
     if (!user.verified) throw new NotFoundException('Failed to verify email')
-  }
-
-  async changePassword(dto: ChangePasswordDto) {
-    let tokenData: TokenData
-    try {
-      tokenData = this.jwtService.verify(dto.token, {
-        secret: this.config.get('JWT_SECRET_RESTORE'),
-      })
-    } catch (error) {
-      // throw new ForbiddenException('Token is not valid!')
-    }
-
-    const user = await this.usersService.findUnique('email', tokenData.email)
-
-    if (!user) throw new ForbiddenException('User does not exist')
-    if (!user.verified) throw new ForbiddenException('Email is not verified!')
-
-    const passwordMatches = await argon2.verify(user.hash, dto.password)
-
-    // Если пароли совпадают
-    if (passwordMatches)
-      throw new ForbiddenException('The password must not match the old value')
-
-    const hashedPassword = await this.hashData(dto.password)
-
-    await this.usersService.updatePassword(user.email, hashedPassword)
-  }
-
-  hashData(data: string) {
-    return argon2.hash(data)
   }
 
   setCookies(at: string, rt: string, response: Response) {

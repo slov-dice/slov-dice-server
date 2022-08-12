@@ -8,6 +8,7 @@ import {
 } from '@nestjs/websockets'
 import { Logger } from '@nestjs/common'
 import { Socket, Server } from 'socket.io'
+import * as argon2 from 'argon2'
 
 import { UsersService } from 'modules/users/users.service'
 import { MailService } from 'modules/mail/mail.service'
@@ -17,7 +18,7 @@ import {
   E_AuthSubscribe,
   I_EmitPayload,
   I_SubscriptionData,
-} from 'models/socket/auth'
+} from 'models/socket/restore'
 import { t } from 'languages'
 
 @WebSocketGateway({ cors: true })
@@ -60,11 +61,12 @@ export class AuthGateway
     client: Socket,
     data: I_EmitPayload[E_AuthEmit.restoreCheckEmail],
   ) {
-    const user = await this.usersService.findUnique('email', data.email)
     const payload: I_SubscriptionData[E_AuthSubscribe.getRestoreCheckEmail] = {
       message: { EN: '', RU: '' },
       status: E_StatusServerMessage.error,
     }
+
+    const user = await this.usersService.findUnique('email', data.email)
 
     // Если пользователь не найден
     if (!user) {
@@ -87,31 +89,96 @@ export class AuthGateway
       return
     }
 
-    // Если пользователь уже запрашивал код
-    if (this.restoreSessions[client.id]) {
-      payload.message = t('auth.info.resetCodeWasSended')
-      payload.status = E_StatusServerMessage.info
-      client.emit(E_AuthSubscribe.getRestoreCheckEmail, payload)
-      return
-    }
-
     // Генерируем код
     const code = String(~~(Math.random() * (9999 - 1000) + 1000))
 
-    // Создаём привязку
+    // Создаём|обновляем привязку
     this.restoreSessions[client.id] = {
       email: user.email,
       code,
     }
 
     // Отправляем письмо с кодом
-    this.mailService.sendUserRestorePassword(user, code)
+    await this.mailService.sendUserRestorePassword(user, code).then(
+      () => {
+        // Оповещаем юзера об успешной отправке
+        payload.status = E_StatusServerMessage.success
+        payload.message = t('auth.success.checkEmail')
+        client.emit(E_AuthSubscribe.getRestoreCheckEmail, payload)
+      },
+      () => {
+        // Ошибка при отправки письма
+        payload.message = t('auth.error.checkEmail')
+        client.emit(E_AuthSubscribe.getRestoreCheckEmail, payload)
+      },
+    )
+  }
 
-    // Оповещаем юзера об успешной отправке
+  // Проверка кода
+  @SubscribeMessage(E_AuthEmit.restoreCheckCode)
+  restoreCheckCode(
+    client: Socket,
+    data: I_EmitPayload[E_AuthEmit.restoreCheckCode],
+  ) {
+    const payload: I_SubscriptionData[E_AuthSubscribe.getRestoreCheckCode] = {
+      message: { EN: '', RU: '' },
+      status: E_StatusServerMessage.error,
+    }
+
+    const clientSession = this.restoreSessions[client.id]
+
+    // Если сессия не найдена
+    if (!clientSession) {
+      payload.message = t('auth.error.sessionNotFound')
+      client.emit(E_AuthSubscribe.getRestoreCheckCode, payload)
+      return
+    }
+
+    // Если код не валидный
+    if (clientSession.code !== data.code) {
+      payload.message = t('auth.error.invalidCode')
+      client.emit(E_AuthSubscribe.getRestoreCheckCode, payload)
+      return
+    }
+
+    // Оповещаем юзера, что код верный
     payload.status = E_StatusServerMessage.success
-    payload.message = t('auth.success.checkEmail')
-    client.emit(E_AuthSubscribe.getRestoreCheckEmail, payload)
+    client.emit(E_AuthSubscribe.getRestoreCheckCode, payload)
+  }
 
-    console.log(this.restoreSessions)
+  // Изменение пароля
+  @SubscribeMessage(E_AuthEmit.restoreChangePassword)
+  async restoreChangePassword(
+    client: Socket,
+    data: I_EmitPayload[E_AuthEmit.restoreChangePassword],
+  ) {
+    const payload: I_SubscriptionData[E_AuthSubscribe.getRestoreChangePassword] =
+      {
+        message: { EN: '', RU: '' },
+        status: E_StatusServerMessage.error,
+      }
+
+    const clientSession = this.restoreSessions[client.id]
+
+    // Если сессия не найдена
+    if (!clientSession) {
+      payload.message = t('auth.error.sessionNotFound')
+      client.emit(E_AuthSubscribe.getRestoreChangePassword, payload)
+      return
+    }
+
+    // Хешируем пароль
+    const hashedPassword = await argon2.hash(data.password)
+
+    // Изменяем пароль в бд
+    await this.usersService.updatePassword(clientSession.email, hashedPassword)
+
+    // Оповещаем юзера об успешном изменении пароля
+    payload.status = E_StatusServerMessage.success
+    payload.message = t('auth.success.changePassword')
+    client.emit(E_AuthSubscribe.getRestoreChangePassword, payload)
+
+    // Удаляем сессию
+    delete this.restoreSessions[client.id]
   }
 }

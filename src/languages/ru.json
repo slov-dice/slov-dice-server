@@ -5,13 +5,15 @@
       "userNotFound": "Пользователь не найден",
       "userRegisteredByThirdParty": "Эта почта зарегистрированная через сторонний сервис",
       "wrongPassword": "Неверный пароль",
-      "mailNotVerified": "Эта почта не подтверждена"
+      "mailNotVerified": "Эта почта не подтверждена",
+      "sessionNotFound": "Сессия не найдена",
+      "invalidCode": "Неверный код для восстановления",
+      "passwordsMatch": "Пароли совпадают",
+      "letterSendingError": "Ошибка при отправке письма"
     },
     "success": {
-      "checkEmail": "Код был успешно отправлен на вашу почту!"
-    },
-    "info": {
-      "resetCodeWasSended": "Код для восстановления уже отправлен к вам на почту"
+      "checkEmail": "Код был успешно отправлен на вашу почту!",
+      "changePassword": "Пароль успешно изменён"
     }
   }
 }

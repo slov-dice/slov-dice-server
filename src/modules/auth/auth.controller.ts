@@ -112,11 +112,4 @@ export class AuthController {
   emailConfirmation(@Body() dto: EmailConfirmDto) {
     return this.authService.emailConfirmation(dto)
   }
-
-  // Изменение пароля
-  @Post('change/password')
-  @HttpCode(HttpStatus.OK)
-  changePassword(@Body() dto: ChangePasswordDto) {
-    return this.authService.changePassword(dto)
-  }
 }
