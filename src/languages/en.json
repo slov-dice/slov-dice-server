@@ -9,11 +9,16 @@
       "sessionNotFound": "Session not found",
       "invalidCode": "Invalid restore code",
       "passwordsMatch": "Passwords match",
-      "letterSendingError": "Error sending letter"
+      "letterSendingError": "Error sending letter",
+      "invalidToken": "Invalid verification token",
+      "unauthorized": "Unauthorized"
     },
     "success": {
       "checkEmail": "Code has been successfully sent to your email!",
-      "changePassword": "Password changed successfully"
+      "changePassword": "Password changed successfully",
+      "registered": "You have successfully registered!",
+      "login": "You have successfully logged in",
+      "verified": "Account successfully verified"
     }
   }
 }

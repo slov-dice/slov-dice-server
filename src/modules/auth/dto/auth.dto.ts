@@ -42,16 +42,6 @@ export class EmailConfirmDto {
   token: string
 }
 
-export class ChangePasswordDto {
-  @IsString()
-  @IsNotEmpty()
-  token: string
-
-  @IsString()
-  @IsNotEmpty()
-  password: string
-}
-
 export class LogoutDto {
   @IsString()
   @IsNotEmpty()

@@ -17,7 +17,6 @@ import {
   SignInDto,
   ThirdPartyDto,
   EmailConfirmDto,
-  ChangePasswordDto,
   LogoutDto,
 } from './dto/auth.dto'
 import { T_AuthResponse, T_ThirdPartyUserData } from './models/response.type'
@@ -60,11 +59,15 @@ export class AuthController {
       // Получаем токен пользователя с помощью кода
       const responseToken = await this.authService.getTokenFromThirdParty(dto)
 
+      console.log('responseToken', responseToken)
+
       // Получаем юзера
       const responseUser = await this.authService.getDataFromThirdParty(
         dto.authType,
         responseToken.data.access_token,
       )
+
+      console.log('responseUser', responseUser)
 
       const userData: T_ThirdPartyUserData = responseUser.data
 

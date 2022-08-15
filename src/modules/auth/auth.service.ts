@@ -17,7 +17,6 @@ import {
   SignInDto,
   ThirdPartyDto,
   EmailConfirmDto,
-  ChangePasswordDto,
   LogoutDto,
 } from './dto/auth.dto'
 import {
@@ -75,7 +74,13 @@ export class AuthService {
     const verifyToken = await this.generateMailToken(user.id, user.email)
     await this.mailService.sendUserConfirmation(user, verifyToken)
 
-    return { id: user.id, nickname: user.nickname, email: user.email }
+    return {
+      accessToken: tokens.access_token,
+      message: t('auth.success.registered'),
+      id: user.id,
+      nickname: user.nickname,
+      email: user.email,
+    }
   }
 
   // Аутентификация
@@ -102,6 +107,8 @@ export class AuthService {
     this.setCookies(tokens.access_token, tokens.refresh_token, response)
 
     return {
+      accessToken: tokens.access_token,
+      message: t('auth.success.login'),
       id: user.id,
       nickname: user.nickname,
       email: user.email,
@@ -163,6 +170,8 @@ export class AuthService {
       const tokens = await this.generateTokens(user.id, user.email)
       this.setCookies(tokens.access_token, tokens.refresh_token, response)
       return {
+        accessToken: tokens.access_token,
+        message: t('auth.success.login'),
         id: user.id,
         nickname: user.nickname,
         email: user.email,
@@ -187,6 +196,8 @@ export class AuthService {
       this.lobbyUsers.create(createdUser)
 
       return {
+        accessToken: tokens.access_token,
+        message: t('auth.success.registered'),
         id: createdUser.id,
         nickname: createdUser.nickname,
         email: createdUser.email,
@@ -197,7 +208,6 @@ export class AuthService {
   async guestAuth(response: Response) {
     const totalCount = await this.usersService.getTotalUsersCount()
     const nickname = `Player-${totalCount}`
-    console.log('totalCount', totalCount)
 
     const user = await this.usersService.create(
       null,
@@ -211,13 +221,16 @@ export class AuthService {
     this.lobbyUsers.create(user)
 
     return {
+      accessToken: tokens.access_token,
+      message: t('auth.success.registered'),
       id: user.id,
       nickname: user.nickname,
       email: user.email,
     }
   }
 
-  async logout(userId: number, response: Response, dto: LogoutDto) {
+  logout(userId: number, response: Response, dto: LogoutDto) {
+    console.log(dto)
     if (dto.from === E_AuthType.guest) {
       this.usersService.removeById(userId)
     }
@@ -263,17 +276,21 @@ export class AuthService {
     const user = await this.usersService.verifyEmail(tokenData.email)
 
     if (!user) throw new NotFoundException(t('auth.error.userNotFound'))
-    if (!user.verified) throw new NotFoundException('Failed to verify email')
+    return { message: t('auth.success.verified') }
   }
 
   setCookies(at: string, rt: string, response: Response) {
     response.cookie('access_token', at, {
       httpOnly: false,
       maxAge: 60_000 * 15, // 15 минут
+      sameSite: 'none',
+      secure: true,
     })
     response.cookie('refresh_token', rt, {
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000, // неделя
+      sameSite: 'none',
+      secure: true,
     })
   }
 
