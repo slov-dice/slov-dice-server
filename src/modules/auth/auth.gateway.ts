@@ -6,7 +6,7 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
 } from '@nestjs/websockets'
-import { Logger } from '@nestjs/common'
+import { Logger, UseGuards } from '@nestjs/common'
 import { Socket, Server } from 'socket.io'
 import * as argon2 from 'argon2'
 
@@ -20,6 +20,7 @@ import {
   I_SubscriptionData,
 } from 'models/socket/restore'
 import { t } from 'languages'
+import { WsThrottlerGuard } from 'guards/wsThrottler.guard'
 
 @WebSocketGateway({ cors: true })
 export class AuthGateway
@@ -56,6 +57,7 @@ export class AuthGateway
   }
 
   // Проверка почты и отправка кода для восстановления пароля
+  @UseGuards(WsThrottlerGuard)
   @SubscribeMessage(E_AuthEmit.restoreCheckEmail)
   async restoreCheckEmail(
     client: Socket,
