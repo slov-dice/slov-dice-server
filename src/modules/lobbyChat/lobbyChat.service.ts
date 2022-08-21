@@ -1,19 +1,21 @@
 import { Injectable } from '@nestjs/common'
 import { v4 } from 'uuid'
 
-import { LobbyChat, LobbyUser } from 'models/app'
+import { I_LobbyChat, I_LobbyUser } from 'models/app'
 
 @Injectable()
 export class LobbyChatService {
-  chat: LobbyChat[] = [{ author: 'xep', authorId: 111, id: '123', text: 'xep' }]
+  chat: I_LobbyChat[] = [
+    { author: 'xep', authorId: 111, id: '123', text: 'xep' },
+  ]
 
-  getAll(): LobbyChat[] {
+  getAll(): I_LobbyChat[] {
     return this.chat
   }
 
-  create(user: LobbyUser, text: string): LobbyChat {
+  create(user: I_LobbyUser, text: string): I_LobbyChat {
     const messageId = v4()
-    const message: LobbyChat = {
+    const message: I_LobbyChat = {
       id: messageId,
       authorId: user.id,
       author: user.nickname,

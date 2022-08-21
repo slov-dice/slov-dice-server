@@ -3,25 +3,34 @@ export type T_UserId = number
 export type T_RoomId = string
 export type T_AccessToken = string
 
-export enum UserStatusEnum {
+export type T_Tokens = {
+  access_token: string
+  refresh_token: string
+}
+
+export enum E_UserStatus {
   offline = 'offline',
   online = 'online',
   inRoom = 'inRoom',
 }
-export enum RoomTypeEnum {
+
+export enum E_RoomType {
   public = 'PUBLIC',
   private = 'PRIVATE',
 }
-export enum RoomMessageTypeEnum {
+
+export enum E_RoomMessageType {
   custom = 'custom',
   command = 'command',
 }
+
 export enum E_AuthType {
   email = 'EMAIL',
   google = 'GOOGLE',
   discord = 'DISCORD',
   guest = 'GUEST',
 }
+
 export enum E_Locale {
   ru = 'RU',
   en = 'EN',
@@ -35,7 +44,7 @@ export enum E_StatusServerMessage {
   info = 'info',
 }
 
-export interface Profile {
+export interface I_Profile {
   id: T_UserId
   email: string
   nickname: string
@@ -45,49 +54,50 @@ export interface Profile {
   }
 }
 
-export interface Lobby {
-  users: LobbyUser[]
-  chat: LobbyChat[]
-  rooms: PreviewRoom[]
+export interface I_Lobby {
+  users: I_LobbyUser[]
+  chat: I_LobbyChat[]
+  rooms: I_PreviewRoom[]
 }
 
-export interface LobbyUser {
+export interface I_LobbyUser {
   socketId: T_SocketId
   id: T_UserId
   nickname: string
-  status: UserStatusEnum
+  from: E_AuthType
+  status: E_UserStatus
 }
 
-export interface LobbyChat {
+export interface I_LobbyChat {
   id: string
   authorId: T_UserId
   author: string
   text: string
 }
 
-export interface RoomUser {
+export interface I_RoomUser {
   [id: T_UserId]: T_SocketId
 }
 
-export interface RoomChat {
+export interface I_RoomChat {
   id: string
   authorId: T_UserId
   author: string
   text: string
-  type: RoomMessageTypeEnum
+  type: E_RoomMessageType
 }
 
-export interface PreviewRoom {
+export interface I_PreviewRoom {
   id: T_RoomId
   authorId: T_UserId
   name: string
   size: number
   currentSize: number
-  type: RoomTypeEnum
-  users: RoomUser[]
+  type: E_RoomType
+  users: I_RoomUser[]
 }
 
-export interface FullRoom extends PreviewRoom {
+export interface I_FullRoom extends I_PreviewRoom {
   password: string
-  messages: RoomChat[]
+  messages: I_RoomChat[]
 }

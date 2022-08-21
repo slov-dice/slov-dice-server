@@ -14,6 +14,7 @@ export class TasksService {
 
   @Interval(hourInMilliseconds)
   async handleInterval() {
+    // TODO: Удалять гостя из LobbyUsers
     const users = await this.usersService.removeOldGuests()
     this.logger.debug(`Guests removed: ${users.count}`)
   }

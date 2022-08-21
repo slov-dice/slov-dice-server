@@ -181,33 +181,30 @@ export class AuthService {
     // Регистрация
     else if (!user) {
       const nickname = this.usersService.generateNicknameByEmail(data.email)
-      const createdUser = await this.usersService.create(
+      const user = await this.usersService.create(
         data.email,
         nickname,
         '',
         authType,
       )
 
-      const tokens = await this.generateTokens(
-        createdUser.id,
-        createdUser.email,
-      )
+      const tokens = await this.generateTokens(user.id, user.email)
       this.setCookies(tokens.access_token, tokens.refresh_token, response)
-      this.lobbyUsers.create(createdUser)
+      this.lobbyUsers.create(user)
 
       return {
         accessToken: tokens.access_token,
         message: t('auth.success.registered'),
-        id: createdUser.id,
-        nickname: createdUser.nickname,
-        email: createdUser.email,
+        id: user.id,
+        nickname: user.nickname,
+        email: user.email,
       }
     }
   }
 
   async guestAuth(response: Response) {
-    const totalCount = await this.usersService.getTotalUsersCount()
-    const nickname = `Player-${totalCount}`
+    const postfix = ~~(Math.random() * (9999 - 1000) + 1000)
+    const nickname = `Player-${postfix}`
 
     const user = await this.usersService.create(
       null,
@@ -230,7 +227,6 @@ export class AuthService {
   }
 
   logout(userId: number, response: Response, dto: LogoutDto) {
-    console.log(dto)
     if (dto.from === E_AuthType.guest) {
       this.usersService.removeById(userId)
     }

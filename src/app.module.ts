@@ -22,7 +22,7 @@ import { LobbyUsersModule } from 'modules/lobbyUsers/lobbyUsers.module'
     AuthModule,
     PrismaModule,
     LobbyChatModule,
-    LobbyUsersModule
+    LobbyUsersModule,
   ],
   providers: [
     {

@@ -14,8 +14,8 @@ import { UsersService } from 'modules/users/users.service'
 import { MailService } from 'modules/mail/mail.service'
 import { E_AuthType, E_StatusServerMessage, T_SocketId } from 'models/app'
 import {
-  E_AuthEmit,
-  E_AuthSubscribe,
+  E_Emit,
+  E_Subscribe,
   I_EmitPayload,
   I_SubscriptionData,
 } from 'models/socket/restore'
@@ -58,12 +58,12 @@ export class AuthGateway
 
   // Проверка почты и отправка кода для восстановления пароля
   @UseGuards(WsThrottlerGuard)
-  @SubscribeMessage(E_AuthEmit.restoreCheckEmail)
+  @SubscribeMessage(E_Emit.restoreCheckEmail)
   async restoreCheckEmail(
     client: Socket,
-    data: I_EmitPayload[E_AuthEmit.restoreCheckEmail],
+    data: I_EmitPayload[E_Emit.restoreCheckEmail],
   ) {
-    const payload: I_SubscriptionData[E_AuthSubscribe.getRestoreCheckEmail] = {
+    const payload: I_SubscriptionData[E_Subscribe.getRestoreCheckEmail] = {
       message: { EN: '', RU: '' },
       status: E_StatusServerMessage.error,
     }
@@ -73,21 +73,21 @@ export class AuthGateway
     // Если пользователь не найден
     if (!user) {
       payload.message = t('auth.error.userNotFound')
-      client.emit(E_AuthSubscribe.getRestoreCheckEmail, payload)
+      client.emit(E_Subscribe.getRestoreCheckEmail, payload)
       return
     }
 
     // Если пользователь не зарегистрирован по email
     if (user.from !== E_AuthType.email) {
       payload.message = t('auth.error.userRegisteredByThirdParty')
-      client.emit(E_AuthSubscribe.getRestoreCheckEmail, payload)
+      client.emit(E_Subscribe.getRestoreCheckEmail, payload)
       return
     }
 
     // Если почта не верифицирована
     if (!user.verified) {
       payload.message = t('auth.error.mailNotVerified')
-      client.emit(E_AuthSubscribe.getRestoreCheckEmail, payload)
+      client.emit(E_Subscribe.getRestoreCheckEmail, payload)
       return
     }
 
@@ -106,23 +106,23 @@ export class AuthGateway
         // Оповещаем юзера об успешной отправке
         payload.status = E_StatusServerMessage.success
         payload.message = t('auth.success.checkEmail')
-        client.emit(E_AuthSubscribe.getRestoreCheckEmail, payload)
+        client.emit(E_Subscribe.getRestoreCheckEmail, payload)
       },
       () => {
         // Ошибка при отправки письма
         payload.message = t('auth.error.checkEmail')
-        client.emit(E_AuthSubscribe.getRestoreCheckEmail, payload)
+        client.emit(E_Subscribe.getRestoreCheckEmail, payload)
       },
     )
   }
 
   // Проверка кода
-  @SubscribeMessage(E_AuthEmit.restoreCheckCode)
+  @SubscribeMessage(E_Emit.restoreCheckCode)
   restoreCheckCode(
     client: Socket,
-    data: I_EmitPayload[E_AuthEmit.restoreCheckCode],
+    data: I_EmitPayload[E_Emit.restoreCheckCode],
   ) {
-    const payload: I_SubscriptionData[E_AuthSubscribe.getRestoreCheckCode] = {
+    const payload: I_SubscriptionData[E_Subscribe.getRestoreCheckCode] = {
       message: { EN: '', RU: '' },
       status: E_StatusServerMessage.error,
     }
@@ -132,40 +132,39 @@ export class AuthGateway
     // Если сессия не найдена
     if (!clientSession) {
       payload.message = t('auth.error.sessionNotFound')
-      client.emit(E_AuthSubscribe.getRestoreCheckCode, payload)
+      client.emit(E_Subscribe.getRestoreCheckCode, payload)
       return
     }
 
     // Если код не валидный
     if (clientSession.code !== data.code) {
       payload.message = t('auth.error.invalidCode')
-      client.emit(E_AuthSubscribe.getRestoreCheckCode, payload)
+      client.emit(E_Subscribe.getRestoreCheckCode, payload)
       return
     }
 
     // Оповещаем юзера, что код верный
     payload.status = E_StatusServerMessage.success
-    client.emit(E_AuthSubscribe.getRestoreCheckCode, payload)
+    client.emit(E_Subscribe.getRestoreCheckCode, payload)
   }
 
   // Изменение пароля
-  @SubscribeMessage(E_AuthEmit.restoreChangePassword)
+  @SubscribeMessage(E_Emit.restoreChangePassword)
   async restoreChangePassword(
     client: Socket,
-    data: I_EmitPayload[E_AuthEmit.restoreChangePassword],
+    data: I_EmitPayload[E_Emit.restoreChangePassword],
   ) {
-    const payload: I_SubscriptionData[E_AuthSubscribe.getRestoreChangePassword] =
-      {
-        message: { EN: '', RU: '' },
-        status: E_StatusServerMessage.error,
-      }
+    const payload: I_SubscriptionData[E_Subscribe.getRestoreChangePassword] = {
+      message: { EN: '', RU: '' },
+      status: E_StatusServerMessage.error,
+    }
 
     const clientSession = this.restoreSessions[client.id]
 
     // Если сессия не найдена
     if (!clientSession) {
       payload.message = t('auth.error.sessionNotFound')
-      client.emit(E_AuthSubscribe.getRestoreChangePassword, payload)
+      client.emit(E_Subscribe.getRestoreChangePassword, payload)
       return
     }
 
@@ -178,7 +177,7 @@ export class AuthGateway
     // Оповещаем юзера об успешном изменении пароля
     payload.status = E_StatusServerMessage.success
     payload.message = t('auth.success.changePassword')
-    client.emit(E_AuthSubscribe.getRestoreChangePassword, payload)
+    client.emit(E_Subscribe.getRestoreChangePassword, payload)
 
     // Удаляем сессию
     delete this.restoreSessions[client.id]

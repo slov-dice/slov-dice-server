@@ -5,26 +5,26 @@ export type T_RestoreData = {
   status: E_StatusServerMessage
 }
 
-export enum E_AuthSubscribe {
+export enum E_Subscribe {
   getRestoreCheckEmail = 'getRestoreCheckEmail',
   getRestoreCheckCode = 'getRestoreCheckCode',
   getRestoreChangePassword = 'getRestoreChangePassword',
 }
 
 export interface I_SubscriptionData {
-  [E_AuthSubscribe.getRestoreCheckEmail]: T_RestoreData
-  [E_AuthSubscribe.getRestoreCheckCode]: T_RestoreData
-  [E_AuthSubscribe.getRestoreChangePassword]: T_RestoreData
+  [E_Subscribe.getRestoreCheckEmail]: T_RestoreData
+  [E_Subscribe.getRestoreCheckCode]: T_RestoreData
+  [E_Subscribe.getRestoreChangePassword]: T_RestoreData
 }
 
-export enum E_AuthEmit {
+export enum E_Emit {
   restoreCheckEmail = 'restoreCheckEmail',
   restoreCheckCode = 'restoreCheckCode',
   restoreChangePassword = 'restoreChangePassword',
 }
 
 export interface I_EmitPayload {
-  [E_AuthEmit.restoreCheckEmail]: { email: string }
-  [E_AuthEmit.restoreCheckCode]: { code: string }
-  [E_AuthEmit.restoreChangePassword]: { password: string }
+  [E_Emit.restoreCheckEmail]: { email: string }
+  [E_Emit.restoreCheckCode]: { code: string }
+  [E_Emit.restoreChangePassword]: { password: string }
 }

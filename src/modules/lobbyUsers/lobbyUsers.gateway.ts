@@ -14,11 +14,11 @@ import { LobbyUsersService } from './lobbyUsers.service'
 import { WsGuard } from 'guards/ws.guard'
 import { UsersService } from 'modules/users/users.service'
 import {
-  EmitNamespace,
-  EmitPayload,
-  SubscribeNamespace,
-  SubscriptionData,
-} from 'models/socket'
+  E_Emit,
+  E_Subscribe,
+  I_EmitPayload,
+  I_SubscriptionData,
+} from 'models/socket/lobbyUsers'
 
 @WebSocketGateway({ cors: true })
 export class LobbyUsersGateway
@@ -55,74 +55,82 @@ export class LobbyUsersGateway
     // Если пользователь не найден
     if (!user) return
 
-    const userDisconnectedPayload: EmitPayload[EmitNamespace.userDisconnected] =
+    const userDisconnectedPayload: I_SubscriptionData[E_Subscribe.getUpdatedLobbyUser] =
       {
         user,
       }
 
     // Отправка отключённого клиента ВСЕМ, кроме ОТПРАВИТЕЛЯ
     client.broadcast.emit(
-      EmitNamespace.userDisconnected,
+      E_Subscribe.getUpdatedLobbyUser,
       userDisconnectedPayload,
     )
   }
 
   // Делаем пользователя онлайн и присваиваем socketId, после успешной авторизации
-  @UseGuards(WsGuard)
-  @SubscribeMessage(SubscribeNamespace.setUserOnline)
+  // @UseGuards(WsGuard)
+  @SubscribeMessage(E_Emit.setLobbyUserOnline)
   setUserOnline(
     client: Socket,
-    data: SubscriptionData[SubscribeNamespace.setUserOnline],
+    data: I_EmitPayload[E_Emit.setLobbyUserOnline],
   ) {
     const user = this.lobbyUsers.setOnlineByUserId(data.userId, client.id)
 
-    const getUserLobbyPayload: EmitPayload[EmitNamespace.getUserLobby] = {
+    const payload: I_SubscriptionData[E_Subscribe.getUpdatedLobbyUser] = {
       user,
     }
 
     // Отправка нового клиента ВСЕМ, кроме ОТПРАВИТЕЛЯ
-    client.broadcast.emit(EmitNamespace.getUserLobby, getUserLobbyPayload)
+    client.broadcast.emit(E_Subscribe.getUpdatedLobbyUser, payload)
   }
 
   // Получение всех пользователей
-  @UseGuards(WsGuard)
-  @SubscribeMessage(SubscribeNamespace.requestAllUsersLobby)
-  requestAllUsers(
-    client: Socket,
-    data: SubscriptionData[SubscribeNamespace.requestAllUsersLobby],
-  ) {
+  // @UseGuards(WsGuard)
+  @SubscribeMessage(E_Emit.requestLobbyUsers)
+  requestAllUsers(client: Socket) {
     const users = this.lobbyUsers.getAll()
-    const getAllUsersLobbyPayload: EmitPayload[EmitNamespace.getAllUsersLobby] =
-      {
-        users,
-      }
+    const payload: I_SubscriptionData[E_Subscribe.getLobbyUsers] = {
+      users,
+    }
 
     // Отправляем список пользователей в лобби ОТПРАВИТЕЛЮ
-    client.emit(EmitNamespace.getAllUsersLobby, getAllUsersLobbyPayload)
+    client.emit(E_Subscribe.getLobbyUsers, payload)
+  }
+
+  @SubscribeMessage(E_Emit.logoutLobbyUser)
+  logoutLobbyUser(client: Socket) {
+    const user = this.lobbyUsers.logout(client.id)
+
+    const payload: I_SubscriptionData[E_Subscribe.getUpdatedLobbyUser] = {
+      user,
+    }
+
+    // Отправка нового клиента ВСЕМ, кроме ОТПРАВИТЕЛЯ
+    client.broadcast.emit(E_Subscribe.getUpdatedLobbyUser, payload)
   }
 
   // Отключаем пользователя от комнаты и делаем его оффлайн,
   // если пользователь выходит из профиля.
-  @SubscribeMessage(SubscribeNamespace.requestUserLogout)
-  requestUserLogout(
-    client: Socket,
-    data: SubscriptionData[SubscribeNamespace.requestUserLogout],
-  ) {
-    if (data.roomId) {
-      // TODO: исключаем пользователя из комнаты
-    }
-    const user = this.lobbyUsers.setOfflineBySocketId(client.id)
+  // @SubscribeMessage(SubscribeNamespace.requestUserLogout)
+  // requestUserLogout(
+  //   client: Socket,
+  //   data: SubscriptionData[SubscribeNamespace.requestUserLogout],
+  // ) {
+  //   if (data.roomId) {
+  //     // TODO: исключаем пользователя из комнаты
+  //   }
+  //   const user = this.lobbyUsers.setOfflineBySocketId(client.id)
 
-    // Если пользователь не найден
-    if (!user) return
+  //   // Если пользователь не найден
+  //   if (!user) return
 
-    const getUserLobbyPayload: EmitPayload[EmitNamespace.getUserLobby] = {
-      user,
-    }
+  //   const getUserLobbyPayload: EmitPayload[EmitNamespace.getUserLobby] = {
+  //     user,
+  //   }
 
-    // Все пользователи, кроме отправителя получают отключенного пользователя
-    client.broadcast.emit(EmitNamespace.getUserLobby, getUserLobbyPayload)
-  }
+  //   // Все пользователи, кроме отправителя получают отключенного пользователя
+  //   client.broadcast.emit(EmitNamespace.getUserLobby, getUserLobbyPayload)
+  // }
 
   // TODO: новый пользователь зарегистрировался, нужно оповестить всех пользователей
 }

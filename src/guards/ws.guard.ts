@@ -13,9 +13,9 @@ export class WsGuard implements CanActivate {
     private config: ConfigService,
   ) {}
 
-  // TODO: Типизируй меня и пойми
   async canActivate(context: ExecutionContext): Promise<any> {
     try {
+      console.log(context)
       const bearerToken = context.switchToWs().getData().accessToken
       if (!bearerToken) return false
 
