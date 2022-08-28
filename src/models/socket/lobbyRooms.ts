@@ -1,15 +1,23 @@
-import { E_RoomType, I_FullRoom, I_PreviewRoom } from 'models/app'
+import {
+  E_RoomType,
+  I_FullRoom,
+  I_PreviewRoom,
+  T_LocaleServerMessage,
+} from 'models/app'
 
 export enum E_Subscribe {
   getPreviewRooms = 'getPreviewRooms',
-  roomCreated = 'roomCreated',
+  getPreviewRoom = 'getPreviewRoom',
   getFullRoom = 'getFullRoom',
 }
 
 export interface I_SubscriptionData {
   [E_Subscribe.getPreviewRooms]: { previewRooms: I_PreviewRoom[] }
-  [E_Subscribe.roomCreated]: { previewRoom: I_PreviewRoom }
-  [E_Subscribe.getFullRoom]: { fullRoom: I_FullRoom }
+  [E_Subscribe.getPreviewRoom]: { previewRoom: I_PreviewRoom }
+  [E_Subscribe.getFullRoom]: {
+    fullRoom: I_FullRoom
+    message: T_LocaleServerMessage
+  }
 }
 
 export enum E_Emit {

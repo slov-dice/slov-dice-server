@@ -11,13 +11,13 @@ import { Socket, Server } from 'socket.io'
 
 import { LobbyRoomsService } from './lobbyRooms.service'
 
-import { LobbyUsersService } from 'modules/lobbyUsers/lobbyUsers.service'
 import {
   E_Emit,
   I_EmitPayload,
   E_Subscribe,
   I_SubscriptionData,
 } from 'models/socket/lobbyRooms'
+import { t } from 'languages'
 
 @WebSocketGateway({ cors: true })
 export class LobbyRoomsGateway
@@ -72,5 +72,14 @@ export class LobbyRoomsGateway
       roomPassword,
       roomType,
     )
+
+    // Отправляем превью комнату всем, кроме отправителя
+    client.broadcast.emit(E_Subscribe.getPreviewRoom, { previewRoom })
+
+    // Отправляем всю комнату отправителю
+    client.emit(E_Subscribe.getFullRoom, {
+      fullRoom,
+      message: t('room.success.roomCreated'),
+    })
   }
 }

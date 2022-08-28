@@ -2,12 +2,12 @@ import { I_LobbyUser, T_UserId } from 'models/app'
 
 export enum E_Subscribe {
   getLobbyUsers = 'getLobbyUsers',
-  getUpdatedLobbyUser = 'getUpdatedLobbyUser',
+  getLobbyUser = 'getLobbyUser',
 }
 
 export interface I_SubscriptionData {
   [E_Subscribe.getLobbyUsers]: { users: I_LobbyUser[] }
-  [E_Subscribe.getUpdatedLobbyUser]: { user: I_LobbyUser }
+  [E_Subscribe.getLobbyUser]: { user: I_LobbyUser }
 }
 
 export enum E_Emit {

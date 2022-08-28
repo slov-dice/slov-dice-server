@@ -49,16 +49,13 @@ export class LobbyUsersGateway
     // Если пользователь не найден
     if (!user) return
 
-    const userDisconnectedPayload: I_SubscriptionData[E_Subscribe.getUpdatedLobbyUser] =
+    const userDisconnectedPayload: I_SubscriptionData[E_Subscribe.getLobbyUser] =
       {
         user,
       }
 
     // Отправка отключённого клиента ВСЕМ, кроме ОТПРАВИТЕЛЯ
-    client.broadcast.emit(
-      E_Subscribe.getUpdatedLobbyUser,
-      userDisconnectedPayload,
-    )
+    client.broadcast.emit(E_Subscribe.getLobbyUser, userDisconnectedPayload)
   }
 
   // Делаем пользователя онлайн и присваиваем socketId, после успешной авторизации
@@ -69,12 +66,12 @@ export class LobbyUsersGateway
   ) {
     const user = this.lobbyUsers.setOnlineByUserId(data.userId, client.id)
 
-    const payload: I_SubscriptionData[E_Subscribe.getUpdatedLobbyUser] = {
+    const payload: I_SubscriptionData[E_Subscribe.getLobbyUser] = {
       user,
     }
 
     // Отправка нового клиента ВСЕМ, кроме ОТПРАВИТЕЛЯ
-    client.broadcast.emit(E_Subscribe.getUpdatedLobbyUser, payload)
+    client.broadcast.emit(E_Subscribe.getLobbyUser, payload)
   }
 
   // Получение всех пользователей
@@ -93,12 +90,12 @@ export class LobbyUsersGateway
   logoutLobbyUser(client: Socket) {
     const user = this.lobbyUsers.logout(client.id)
 
-    const payload: I_SubscriptionData[E_Subscribe.getUpdatedLobbyUser] = {
+    const payload: I_SubscriptionData[E_Subscribe.getLobbyUser] = {
       user,
     }
 
     // Отправка нового клиента ВСЕМ, кроме ОТПРАВИТЕЛЯ
-    client.broadcast.emit(E_Subscribe.getUpdatedLobbyUser, payload)
+    client.broadcast.emit(E_Subscribe.getLobbyUser, payload)
   }
 
   // Отключаем пользователя от комнаты и делаем его оффлайн,

@@ -20,5 +20,10 @@
       "login": "You have successfully logged in",
       "verified": "Account successfully verified"
     }
+  },
+  "room": {
+    "success": {
+      "roomCreated": "Room created successfully"
+    }
   }
 }
