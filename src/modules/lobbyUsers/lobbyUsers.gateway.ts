@@ -6,13 +6,11 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
 } from '@nestjs/websockets'
-import { Logger, UseGuards } from '@nestjs/common'
+import { Logger } from '@nestjs/common'
 import { Socket, Server } from 'socket.io'
 
 import { LobbyUsersService } from './lobbyUsers.service'
 
-import { WsGuard } from 'guards/ws.guard'
-import { UsersService } from 'modules/users/users.service'
 import {
   E_Emit,
   E_Subscribe,
@@ -29,16 +27,12 @@ export class LobbyUsersGateway
 
   private logger: Logger = new Logger('LobbyUsersGateway')
 
-  constructor(
-    private lobbyUsers: LobbyUsersService,
-    private usersService: UsersService,
-  ) {}
+  constructor(private lobbyUsers: LobbyUsersService) {}
 
   // Инициализация пользователей из бд
   async afterInit() {
     this.logger.log('Init LobbyUsersGateway')
-    const usersDB = await this.usersService.getAll()
-    this.lobbyUsers.initUsers(usersDB)
+    await this.lobbyUsers.initUsers()
   }
 
   // Подключение сокета
@@ -68,7 +62,6 @@ export class LobbyUsersGateway
   }
 
   // Делаем пользователя онлайн и присваиваем socketId, после успешной авторизации
-  // @UseGuards(WsGuard)
   @SubscribeMessage(E_Emit.setLobbyUserOnline)
   setUserOnline(
     client: Socket,
@@ -85,7 +78,6 @@ export class LobbyUsersGateway
   }
 
   // Получение всех пользователей
-  // @UseGuards(WsGuard)
   @SubscribeMessage(E_Emit.requestLobbyUsers)
   requestAllUsers(client: Socket) {
     const users = this.lobbyUsers.getAll()

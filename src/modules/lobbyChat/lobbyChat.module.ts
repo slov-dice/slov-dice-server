@@ -1,19 +1,13 @@
 import { Module } from '@nestjs/common'
-import { JwtModule } from '@nestjs/jwt'
 
-import { LobbyUsersService } from 'modules/lobbyUsers/lobbyUsers.service'
+import { LobbyUsersModule } from 'modules/lobbyUsers/lobbyUsers.module'
 import { UsersService } from 'modules/users/users.service'
 
 import { LobbyChatGateway } from './lobbyChat.gateway'
 import { LobbyChatService } from './lobbyChat.service'
 
 @Module({
-  imports: [JwtModule.register({})],
-  providers: [
-    LobbyChatGateway,
-    LobbyChatService,
-    LobbyUsersService,
-    UsersService
-  ],
+  imports: [LobbyUsersModule],
+  providers: [LobbyChatGateway, LobbyChatService, UsersService],
 })
 export class LobbyChatModule {}

@@ -12,14 +12,13 @@ import { Socket, Server } from 'socket.io'
 import { LobbyChatService } from './lobbyChat.service'
 
 import { WsThrottlerGuard } from 'guards/wsThrottler.guard'
-import { WsGuard } from 'guards/ws.guard'
 import { LobbyUsersService } from 'modules/lobbyUsers/lobbyUsers.service'
-// import {
-//   EmitNamespace,
-//   EmitPayload,
-//   SubscribeNamespace,
-//   SubscriptionData,
-// } from 'models/socket'
+import {
+  E_Emit,
+  I_EmitPayload,
+  E_Subscribe,
+  I_SubscriptionData,
+} from 'models/socket/lobbyChat'
 
 @WebSocketGateway({ cors: true })
 export class LobbyChatGateway
@@ -52,35 +51,35 @@ export class LobbyChatGateway
 
   // Получение всех сообщений
   // @UseGuards(WsGuard)
-  // @SubscribeMessage(SubscribeNamespace.requestAllMessagesLobby)
-  // getAllMessages(
-  //   client: Socket,
-  //   _: SubscriptionData[SubscribeNamespace.requestAllMessagesLobby],
-  // ) {
-  //   const chat = this.lobbyChat.getAll()
+  @SubscribeMessage(E_Emit.requestLobbyMessages)
+  getAllMessages(client: Socket) {
+    const messages = this.lobbyChat.getAllMessages()
 
-  //   const getAllMessagesLobbyPayload: EmitPayload[EmitNamespace.getAllMessagesLobby] =
-  //     {
-  //       chat,
-  //     }
+    const payload: I_SubscriptionData[E_Subscribe.getLobbyMessages] = {
+      messages,
+    }
 
-  //   // Отправка всех сообщений в лобби ОТПРАВИТЕЛЮ
-  //   client.emit(EmitNamespace.getAllMessagesLobby, getAllMessagesLobbyPayload)
-  // }
+    // Отправка всех сообщений ОТПРАВИТЕЛЮ
+    client.emit(E_Subscribe.getLobbyMessages, payload)
+  }
 
-  // // Отправка сообщения в лобби
-  // @UseGuards(WsThrottlerGuard)
-  // @SubscribeMessage(SubscribeNamespace.sendMessageLobby)
-  // sendMessageLobby(
-  //   client: Socket,
-  //   data: SubscriptionData[SubscribeNamespace.sendMessageLobby],
-  // ) {
-  //   const user = this.lobbyUsers.findBySocketId(client.id)
-  //   const message = this.lobbyChat.create(user, data.text)
-  //   const messageLobbyPayload: EmitPayload[EmitNamespace.getMessageLobby] = {
-  //     message,
-  //   }
-  //   // Отправка сообщения ВСЕМ
-  //   this.server.emit(EmitNamespace.getMessageLobby, messageLobbyPayload)
-  // }
+  // Отправка сообщения в лобби
+  @UseGuards(WsThrottlerGuard)
+  @SubscribeMessage(E_Emit.sendLobbyMessage)
+  sendMessageLobby(
+    client: Socket,
+    data: I_EmitPayload[E_Emit.sendLobbyMessage],
+  ) {
+    const users = this.lobbyUsers.getAll()
+    console.log('users', users)
+    const user = this.lobbyUsers.findBySocketId(client.id)
+    console.log('user', user)
+    const message = this.lobbyChat.create(user, data.text)
+    const messageLobbyPayload: I_SubscriptionData[E_Subscribe.getLobbyMessage] =
+      {
+        message,
+      }
+    // Отправка сообщения ВСЕМ
+    this.server.emit(E_Subscribe.getLobbyMessage, messageLobbyPayload)
+  }
 }

@@ -8,12 +8,16 @@ import {
   T_UserId,
   E_UserStatus,
 } from 'models/app'
+import { UsersService } from 'modules/users/users.service'
 
 @Injectable()
 export class LobbyUsersService {
+  constructor(private usersService: UsersService) {}
+
   users: I_LobbyUser[] = []
 
-  initUsers(usersDB: User[]) {
+  async initUsers() {
+    const usersDB = await this.usersService.getAll()
     this.users = usersDB.map(
       (user): I_LobbyUser => ({
         id: user.id,
@@ -24,7 +28,7 @@ export class LobbyUsersService {
       }),
     )
 
-    console.log('user init', this.users)
+    console.log('users init', this.users)
   }
 
   getAll(): I_LobbyUser[] {
@@ -52,6 +56,8 @@ export class LobbyUsersService {
       status: E_UserStatus.online,
       socketId,
     }
+
+    console.log('set user online', this.users[userIndex])
 
     return this.users[userIndex]
   }
@@ -85,6 +91,8 @@ export class LobbyUsersService {
       this.users.splice(userIndex, 1)
     }
 
+    console.log('user logout', user)
+
     return user
   }
 
@@ -97,6 +105,7 @@ export class LobbyUsersService {
   }
 
   findBySocketId(socketId: T_SocketId): I_LobbyUser {
+    console.log('users', this.users)
     return this.users.find((user) => user.socketId === socketId)
   }
 }

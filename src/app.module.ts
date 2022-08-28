@@ -9,6 +9,7 @@ import { PrismaModule } from 'modules/prisma/prisma.module'
 import { TasksModule } from 'modules/tasks/tasks.module'
 import { LobbyChatModule } from 'modules/lobbyChat/lobbyChat.module'
 import { LobbyUsersModule } from 'modules/lobbyUsers/lobbyUsers.module'
+import { LobbyRoomsModule } from './modules/lobbyRooms/lobbyRooms.module'
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { LobbyUsersModule } from 'modules/lobbyUsers/lobbyUsers.module'
     PrismaModule,
     LobbyChatModule,
     LobbyUsersModule,
+    LobbyRoomsModule,
   ],
   providers: [
     {
