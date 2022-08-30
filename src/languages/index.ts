@@ -11,11 +11,11 @@ export const t = (key: string) => {
 
 const getNestedTranslation = (keys: string[]): T_LocaleServerMessage => {
   const RU = keys.reduce((obj: any, key: string) => {
-    return obj?.[key]
+    return obj?.[key] || ''
   }, translation[E_Locale.ru])
 
   const EN = keys.reduce((obj: any, key: string) => {
-    return obj?.[key]
+    return obj?.[key] || ''
   }, translation[E_Locale.en])
 
   return { [E_Locale.ru]: RU, [E_Locale.en]: EN }

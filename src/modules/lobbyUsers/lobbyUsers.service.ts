@@ -63,17 +63,20 @@ export class LobbyUsersService {
   }
 
   setOfflineBySocketId(socketId: T_SocketId): I_LobbyUser | false {
-    const userIndex = this.findIndexBySocketId(socketId)
+    const user = this.findBySocketId(socketId)
 
-    if (userIndex === -1) return false
+    if (!user) return false
 
-    this.users[userIndex] = {
-      ...this.users[userIndex],
-      status: E_UserStatus.offline,
-      socketId: '',
-    }
+    user.status = E_UserStatus.offline
+    user.socketId = ''
 
-    return this.users[userIndex]
+    return user
+  }
+
+  setInRoomBySocketId(socketId: T_SocketId): I_LobbyUser {
+    const user = this.findBySocketId(socketId)
+    user.status = E_UserStatus.inRoom
+    return user
   }
 
   logout(socketId: T_SocketId): I_LobbyUser {
@@ -105,7 +108,6 @@ export class LobbyUsersService {
   }
 
   findBySocketId(socketId: T_SocketId): I_LobbyUser {
-    console.log('users', this.users)
     return this.users.find((user) => user.socketId === socketId)
   }
 }

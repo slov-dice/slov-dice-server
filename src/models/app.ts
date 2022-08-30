@@ -36,6 +36,11 @@ export enum E_Locale {
   en = 'EN',
 }
 
+export type T_SocketDataStatus = {
+  message: T_LocaleServerMessage
+  status: E_StatusServerMessage
+}
+
 export type T_LocaleServerMessage = Record<E_Locale, string>
 
 export enum E_StatusServerMessage {

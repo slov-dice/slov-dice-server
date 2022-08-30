@@ -1,9 +1,4 @@
-import { E_StatusServerMessage, T_LocaleServerMessage } from 'models/app'
-
-export type T_RestoreData = {
-  message: T_LocaleServerMessage
-  status: E_StatusServerMessage
-}
+import { T_SocketDataStatus } from 'models/app'
 
 export enum E_Subscribe {
   getRestoreCheckEmail = 'getRestoreCheckEmail',
@@ -12,9 +7,9 @@ export enum E_Subscribe {
 }
 
 export interface I_SubscriptionData {
-  [E_Subscribe.getRestoreCheckEmail]: T_RestoreData
-  [E_Subscribe.getRestoreCheckCode]: T_RestoreData
-  [E_Subscribe.getRestoreChangePassword]: T_RestoreData
+  [E_Subscribe.getRestoreCheckEmail]: T_SocketDataStatus
+  [E_Subscribe.getRestoreCheckCode]: T_SocketDataStatus
+  [E_Subscribe.getRestoreChangePassword]: T_SocketDataStatus
 }
 
 export enum E_Emit {

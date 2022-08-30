@@ -1,8 +1,17 @@
 import { Injectable } from '@nestjs/common'
 import { v4 } from 'uuid'
 
-import { E_RoomType, I_FullRoom, I_PreviewRoom, T_SocketId } from 'models/app'
+import {
+  E_RoomType,
+  E_StatusServerMessage,
+  I_FullRoom,
+  I_PreviewRoom,
+  T_RoomId,
+  T_SocketId,
+} from 'models/app'
 import { LobbyUsersService } from 'modules/lobbyUsers/lobbyUsers.service'
+import { E_Subscribe, I_SubscriptionData } from 'models/socket/lobbyRooms'
+import { t } from 'languages'
 
 interface I_RoomResponse {
   fullRoom: I_FullRoom
@@ -13,33 +22,10 @@ interface I_RoomResponse {
 export class LobbyRoomsService {
   constructor(private lobbyUsers: LobbyUsersService) {}
 
-  rooms: I_FullRoom[] = [
-    {
-      id: '1',
-      authorId: 222,
-      name: 'TEST PUBLIC',
-      currentSize: 1,
-      messages: [],
-      password: '',
-      size: 6,
-      type: E_RoomType.public,
-      users: [{ 12: '1212' }],
-    },
-    {
-      id: '2',
-      authorId: 222,
-      name: 'TEST PRIVATE',
-      currentSize: 1,
-      messages: [],
-      password: '',
-      size: 6,
-      type: E_RoomType.private,
-      users: [{ 12: '1212' }],
-    },
-  ]
+  rooms: I_FullRoom[] = []
 
   getAllPreviewRooms(): I_PreviewRoom[] {
-    return this.rooms.map((room): I_PreviewRoom => this.getPreviewRoom(room))
+    return this.rooms.map((room): I_PreviewRoom => this.fullToPreviewRoom(room))
   }
 
   create(
@@ -64,14 +50,53 @@ export class LobbyRoomsService {
       messages: [],
     }
 
+    this.lobbyUsers.setInRoomBySocketId(socketId)
     this.rooms.push(room)
 
-    return { fullRoom: room, previewRoom: this.getPreviewRoom(room) }
+    return { fullRoom: room, previewRoom: this.fullToPreviewRoom(room) }
   }
 
-  getPreviewRoom(room: I_FullRoom): I_PreviewRoom {
+  join(
+    socketId: T_SocketId,
+    roomId: T_RoomId,
+    password: string,
+  ): I_SubscriptionData[E_Subscribe.getFullRoom] {
+    const room = this.findRoomById(roomId)
+
+    // Если комната переполнена
+    if (room.currentSize >= room.size)
+      return {
+        message: t('room.error.full'),
+        status: E_StatusServerMessage.error,
+      }
+
+    // Если пароль не совпадает
+    if (room.password !== password && room.type === E_RoomType.private)
+      return {
+        message: t('room.error.wrongPassword'),
+        status: E_StatusServerMessage.error,
+      }
+
+    const user = this.lobbyUsers.setInRoomBySocketId(socketId)
+
+    // Добавляем пользователя в комнату
+    room.users.push({ [user.id]: socketId })
+    room.currentSize++
+
+    return {
+      fullRoom: room,
+      message: t('room.success.join'),
+      status: E_StatusServerMessage.success,
+    }
+  }
+
+  fullToPreviewRoom(room: I_FullRoom): I_PreviewRoom {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, messages, ...rest } = room
     return rest
+  }
+
+  findRoomById(id: T_RoomId): I_FullRoom {
+    return this.rooms.find((room) => room.id === id)
   }
 }

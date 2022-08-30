@@ -49,13 +49,12 @@ export class LobbyUsersGateway
     // Если пользователь не найден
     if (!user) return
 
-    const userDisconnectedPayload: I_SubscriptionData[E_Subscribe.getLobbyUser] =
-      {
-        user,
-      }
+    const payload: I_SubscriptionData[E_Subscribe.getLobbyUser] = {
+      user,
+    }
 
     // Отправка отключённого клиента ВСЕМ, кроме ОТПРАВИТЕЛЯ
-    client.broadcast.emit(E_Subscribe.getLobbyUser, userDisconnectedPayload)
+    client.broadcast.emit(E_Subscribe.getLobbyUser, payload)
   }
 
   // Делаем пользователя онлайн и присваиваем socketId, после успешной авторизации

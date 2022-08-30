@@ -23,7 +23,15 @@
   },
   "room": {
     "success": {
-      "roomCreated": "Room created successfully"
+      "created": "Room created successfully",
+      "join": "Successfully join"
+    },
+    "info": {
+      "userJoin": "New user join to party!"
+    },
+    "error": {
+      "full": "Room is full",
+      "wrongPassword": "Wrong password"
     }
   }
 }
