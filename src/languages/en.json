@@ -27,7 +27,8 @@
       "join": "Successfully join"
     },
     "info": {
-      "userJoin": "New user join to party!"
+      "userJoin": "New user join to party!",
+      "userLeft": "User has left the room"
     },
     "error": {
       "full": "Room is full",

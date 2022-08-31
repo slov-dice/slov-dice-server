@@ -1,4 +1,4 @@
-import { I_LobbyUser, T_UserId } from 'models/app'
+import { I_LobbyUser, T_RoomId, T_UserId } from 'models/app'
 
 export enum E_Subscribe {
   getLobbyUsers = 'getLobbyUsers',
@@ -19,5 +19,5 @@ export enum E_Emit {
 export interface I_EmitPayload {
   [E_Emit.requestLobbyUsers]: null
   [E_Emit.setLobbyUserOnline]: { userId: T_UserId }
-  [E_Emit.logoutLobbyUser]: null
+  [E_Emit.logoutLobbyUser]: { roomId?: T_RoomId }
 }

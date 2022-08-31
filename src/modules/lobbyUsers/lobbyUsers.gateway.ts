@@ -17,6 +17,14 @@ import {
   I_EmitPayload,
   I_SubscriptionData,
 } from 'models/socket/lobbyUsers'
+import {
+  E_Subscribe as E_LRSubscribe,
+  I_SubscriptionData as I_LRSubscriptionData,
+} from 'models/socket/lobbyRooms'
+
+import { LobbyRoomsService } from 'modules/lobbyRooms/lobbyRooms.service'
+import { t } from 'languages'
+import { E_StatusServerMessage, I_LobbyUser } from 'models/app'
 
 @WebSocketGateway({ cors: true })
 export class LobbyUsersGateway
@@ -27,7 +35,10 @@ export class LobbyUsersGateway
 
   private logger: Logger = new Logger('LobbyUsersGateway')
 
-  constructor(private lobbyUsers: LobbyUsersService) {}
+  constructor(
+    private lobbyRooms: LobbyRoomsService,
+    private lobbyUsers: LobbyUsersService,
+  ) {}
 
   // Инициализация пользователей из бд
   async afterInit() {
@@ -61,16 +72,32 @@ export class LobbyUsersGateway
   @SubscribeMessage(E_Emit.setLobbyUserOnline)
   setUserOnline(
     client: Socket,
-    data: I_EmitPayload[E_Emit.setLobbyUserOnline],
+    { userId }: I_EmitPayload[E_Emit.setLobbyUserOnline],
   ) {
-    const user = this.lobbyUsers.setOnlineByUserId(data.userId, client.id)
+    const fullRoom = this.lobbyRooms.checkUserInRoom(userId)
+    let user: I_LobbyUser
 
-    const payload: I_SubscriptionData[E_Subscribe.getLobbyUser] = {
-      user,
+    // Если пользователь находился в комнате
+    if (fullRoom) {
+      this.lobbyRooms.rejoin(fullRoom, userId, client.id)
+      user = this.lobbyUsers.setInRoomByUserId(userId, client.id)
+      const previewRoom = this.lobbyRooms.fullToPreviewRoom(fullRoom)
+
+      // Подключаем пользователя к сокет комнате
+      client.join(fullRoom.id)
+      client.emit(E_LRSubscribe.getFullRoom, { fullRoom })
+
+      // Отправляем обновлённую полную комнату ВСЕМ в комнате
+      client.to(fullRoom.id).emit(E_LRSubscribe.getFullRoom, { fullRoom })
+
+      // Отправляем всем обновлённое превью комнаты
+      this.server.emit(E_LRSubscribe.getPreviewRoom, { previewRoom })
+    } else {
+      user = this.lobbyUsers.setOnlineByUserId(userId, client.id)
     }
 
-    // Отправка нового клиента ВСЕМ, кроме ОТПРАВИТЕЛЯ
-    client.broadcast.emit(E_Subscribe.getLobbyUser, payload)
+    // Отправка обновлённого клиента ВСЕМ
+    this.server.emit(E_Subscribe.getLobbyUser, { user })
   }
 
   // Получение всех пользователей
@@ -85,40 +112,30 @@ export class LobbyUsersGateway
     client.emit(E_Subscribe.getLobbyUsers, payload)
   }
 
+  // Если пользователь выходит из профиля
   @SubscribeMessage(E_Emit.logoutLobbyUser)
-  logoutLobbyUser(client: Socket) {
+  logoutLobbyUser(client: Socket, data: I_EmitPayload[E_Emit.logoutLobbyUser]) {
     const user = this.lobbyUsers.logout(client.id)
+    this.server.emit(E_Subscribe.getLobbyUser, { user })
 
-    const payload: I_SubscriptionData[E_Subscribe.getLobbyUser] = {
-      user,
+    // Если пользователь находится в комнате
+    if (data.roomId) {
+      const { fullRoom, previewRoom } = this.lobbyRooms.leave(
+        client.id,
+        data.roomId,
+      )
+      // Отправляем обновлённую полную комнату ВСЕМ в комнате
+      const toRoomPayload: I_LRSubscriptionData[E_LRSubscribe.getFullRoom] = {
+        fullRoom: fullRoom,
+        message: t('room.info.userLeft'),
+        status: E_StatusServerMessage.info,
+      }
+      client.to(fullRoom.id).emit(E_LRSubscribe.getFullRoom, toRoomPayload)
+
+      // Отправляем всем обновлённое превью комнаты
+      this.server.emit(E_LRSubscribe.getPreviewRoom, { previewRoom })
     }
-
-    // Отправка нового клиента ВСЕМ, кроме ОТПРАВИТЕЛЯ
-    client.broadcast.emit(E_Subscribe.getLobbyUser, payload)
   }
-
-  // Отключаем пользователя от комнаты и делаем его оффлайн,
-  // если пользователь выходит из профиля.
-  // @SubscribeMessage(SubscribeNamespace.requestUserLogout)
-  // requestUserLogout(
-  //   client: Socket,
-  //   data: SubscriptionData[SubscribeNamespace.requestUserLogout],
-  // ) {
-  //   if (data.roomId) {
-  //     // TODO: исключаем пользователя из комнаты
-  //   }
-  //   const user = this.lobbyUsers.setOfflineBySocketId(client.id)
-
-  //   // Если пользователь не найден
-  //   if (!user) return
-
-  //   const getUserLobbyPayload: EmitPayload[EmitNamespace.getUserLobby] = {
-  //     user,
-  //   }
-
-  //   // Все пользователи, кроме отправителя получают отключенного пользователя
-  //   client.broadcast.emit(EmitNamespace.getUserLobby, getUserLobbyPayload)
-  // }
 
   // TODO: новый пользователь зарегистрировался, нужно оповестить всех пользователей
 }

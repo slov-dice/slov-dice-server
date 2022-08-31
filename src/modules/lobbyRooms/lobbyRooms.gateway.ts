@@ -17,10 +17,7 @@ import {
   E_Subscribe,
   I_SubscriptionData,
 } from 'models/socket/lobbyRooms'
-import {
-  E_Subscribe as E_LobbyUsersSubscribe,
-  I_SubscriptionData as I_LobbyUsersSubscriptionData,
-} from 'models/socket/lobbyUsers'
+import { E_Subscribe as E_LUSubscribe } from 'models/socket/lobbyUsers'
 import { t } from 'languages'
 import { E_StatusServerMessage } from 'models/app'
 import { LobbyUsersService } from 'modules/lobbyUsers/lobbyUsers.service'
@@ -72,7 +69,7 @@ export class LobbyRoomsGateway
     const { roomName, roomSize, roomPassword, roomType } = data
 
     // Создаём комнату, добавляем туда создателя
-    const { fullRoom, previewRoom } = this.lobbyRooms.create(
+    const { fullRoom, previewRoom, user } = this.lobbyRooms.create(
       client.id,
       roomName,
       roomSize,
@@ -94,14 +91,7 @@ export class LobbyRoomsGateway
     })
 
     // Отправляем всем обновлённого пользователя
-    const updatedLobbyUserPayload: I_LobbyUsersSubscriptionData[E_LobbyUsersSubscribe.getLobbyUser] =
-      {
-        user: this.lobbyUsers.findBySocketId(client.id),
-      }
-    this.server.emit(
-      E_LobbyUsersSubscribe.getLobbyUser,
-      updatedLobbyUserPayload,
-    )
+    this.server.emit(E_LUSubscribe.getLobbyUser, { user })
   }
 
   // Вход пользователя в комнату
@@ -115,34 +105,56 @@ export class LobbyRoomsGateway
       return
     }
 
-    client.emit(E_Subscribe.getFullRoom, clientPayload)
+    // Подключаем пользователя к сокет комнате
     client.join(clientPayload.fullRoom.id)
+    client.emit(E_Subscribe.getFullRoom, clientPayload)
 
-    // Отправляем полную комнату ВСЕМ кроме ОТПРАВИТЕЛЯ в комнату
+    // Отправляем обновлённую полную комнату ВСЕМ в комнате
     const toPayload: I_SubscriptionData[E_Subscribe.getFullRoom] = {
       fullRoom: clientPayload.fullRoom,
       message: t('room.info.userJoin'),
       status: E_StatusServerMessage.info,
     }
-    client.broadcast
+    client
       .to(clientPayload.fullRoom.id)
       .emit(E_Subscribe.getFullRoom, toPayload)
 
     // Отправляем всем обновлённое превью комнаты
-    const updatedPreviewRoomPayload: I_SubscriptionData[E_Subscribe.getPreviewRoom] =
-      {
-        previewRoom: this.lobbyRooms.fullToPreviewRoom(clientPayload.fullRoom),
-      }
-    this.server.emit(E_Subscribe.getPreviewRoom, updatedPreviewRoomPayload)
+    const previewRoom = this.lobbyRooms.fullToPreviewRoom(
+      clientPayload.fullRoom,
+    )
+    this.server.emit(E_Subscribe.getPreviewRoom, { previewRoom })
 
     // Отправляем всем обновлённого пользователя
-    const updatedLobbyUserPayload: I_LobbyUsersSubscriptionData[E_LobbyUsersSubscribe.getLobbyUser] =
-      {
-        user: this.lobbyUsers.findBySocketId(client.id),
-      }
-    this.server.emit(
-      E_LobbyUsersSubscribe.getLobbyUser,
-      updatedLobbyUserPayload,
+    const user = this.lobbyUsers.findBySocketId(client.id)
+    this.server.emit(E_LUSubscribe.getLobbyUser, { user })
+  }
+
+  // Ручной выход из комнаты
+  @SubscribeMessage(E_Emit.leaveRoom)
+  leaveRoom(client: Socket, data: I_EmitPayload[E_Emit.leaveRoom]) {
+    const { fullRoom, previewRoom } = this.lobbyRooms.leave(
+      client.id,
+      data.roomId,
     )
+
+    const user = this.lobbyUsers.setOnlineBySocketId(client.id)
+
+    // Отключаем пользователя от сокет комнаты
+    client.leave(fullRoom.id)
+
+    // Отправляем обновлённую полную комнату ВСЕМ в комнате
+    const toRoomPayload: I_SubscriptionData[E_Subscribe.getFullRoom] = {
+      fullRoom: fullRoom,
+      message: t('room.info.userLeft'),
+      status: E_StatusServerMessage.info,
+    }
+    client.to(fullRoom.id).emit(E_Subscribe.getFullRoom, toRoomPayload)
+
+    // Отправляем всем обновлённое превью комнаты
+    this.server.emit(E_Subscribe.getPreviewRoom, { previewRoom })
+
+    // Отправляем всем обновлённого пользователя
+    this.server.emit(E_LUSubscribe.getLobbyUser, { user })
   }
 }

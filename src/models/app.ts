@@ -75,7 +75,8 @@ export interface I_LobbyMessage {
 }
 
 export interface I_RoomUser {
-  [id: T_UserId]: T_SocketId
+  userId: T_UserId
+  socketId: T_SocketId
 }
 
 export interface I_RoomChat {

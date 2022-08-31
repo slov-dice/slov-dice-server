@@ -49,17 +49,16 @@ export class LobbyUsersService {
 
   // Меняет статус пользователя на онлайн и устанавливает socketId
   setOnlineByUserId(userId: T_UserId, socketId: T_SocketId): I_LobbyUser {
-    const userIndex = this.findIndexByUserId(userId)
+    const user = this.findByUserId(userId)
+    user.status = E_UserStatus.online
+    user.socketId = socketId
+    return user
+  }
 
-    this.users[userIndex] = {
-      ...this.users[userIndex],
-      status: E_UserStatus.online,
-      socketId,
-    }
-
-    console.log('set user online', this.users[userIndex])
-
-    return this.users[userIndex]
+  setOnlineBySocketId(socketId: T_SocketId): I_LobbyUser {
+    const user = this.findBySocketId(socketId)
+    user.status = E_UserStatus.online
+    return user
   }
 
   setOfflineBySocketId(socketId: T_SocketId): I_LobbyUser | false {
@@ -70,6 +69,13 @@ export class LobbyUsersService {
     user.status = E_UserStatus.offline
     user.socketId = ''
 
+    return user
+  }
+
+  setInRoomByUserId(userId: T_UserId, socketId: T_SocketId): I_LobbyUser {
+    const user = this.findByUserId(userId)
+    user.status = E_UserStatus.inRoom
+    user.socketId = socketId
     return user
   }
 
@@ -109,5 +115,9 @@ export class LobbyUsersService {
 
   findBySocketId(socketId: T_SocketId): I_LobbyUser {
     return this.users.find((user) => user.socketId === socketId)
+  }
+
+  findByUserId(userId: T_UserId): I_LobbyUser {
+    return this.users.find((user) => user.id === userId)
   }
 }
