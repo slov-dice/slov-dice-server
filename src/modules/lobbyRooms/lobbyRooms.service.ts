@@ -96,21 +96,18 @@ export class LobbyRoomsService {
   }
 
   rejoin(fullRoom: I_FullRoom, userId: T_UserId, socketId: T_SocketId) {
-    console.log('TEST1', JSON.stringify(this.rooms, null, 2))
     fullRoom.users.map((user) => {
       if (user.userId === userId) {
         user.socketId = socketId
       }
       return user
     })
-    console.log('TEST2', JSON.stringify(this.rooms, null, 2))
   }
 
   leave(
     socketId: T_SocketId,
     roomId: T_RoomId,
   ): { fullRoom: I_FullRoom; previewRoom: I_PreviewRoom } {
-    console.log('this.', this.rooms)
     const fullRoom = this.removeUser(socketId, roomId)
     const previewRoom = this.fullToPreviewRoom(fullRoom)
 
