@@ -50,16 +50,23 @@ export class AuthController {
     return this.authService.signInLocal(dto, response)
   }
 
-  // Проверка авторизации
+  // Первоначальная проверка авторизации
+  @UseGuards(AtGuard)
   @Post('check')
   @HttpCode(HttpStatus.OK)
   checkAuth(
     @GetReqAT() at: T_AccessToken,
     @GetReqRT() rt: T_RefreshToken,
-    @Res({ passthrough: true }) response: Response,
-  ): any {
-    console.log('check', at, rt)
-    return this.authService.check(at, rt, response)
+  ): Promise<T_AuthResponse> {
+    return this.authService.check(at, rt)
+  }
+
+  // Интервальная проверка токенов
+  @UseGuards(AtGuard)
+  @Get('check/token')
+  @HttpCode(HttpStatus.OK)
+  checkAuthTokens() {
+    return { message: 'ok' }
   }
 
   // Сторонняя авторизация

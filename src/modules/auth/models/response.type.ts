@@ -7,7 +7,7 @@ export type T_Tokens = {
 
 export type T_AuthResponse = {
   accessToken: string
-  message: T_LocaleServerMessage
+  message?: T_LocaleServerMessage
   id: number
   nickname: string
   email: string

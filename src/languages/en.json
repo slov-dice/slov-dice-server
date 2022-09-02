@@ -20,7 +20,8 @@
       "changePassword": "Password changed successfully",
       "registered": "You have successfully registered!",
       "login": "You have successfully logged in",
-      "verified": "Account successfully verified"
+      "verified": "Account successfully verified",
+      "check": "Successfully check your tokens"
     }
   },
   "room": {

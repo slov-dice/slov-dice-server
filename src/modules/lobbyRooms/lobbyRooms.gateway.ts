@@ -157,4 +157,14 @@ export class LobbyRoomsGateway
     // Отправляем всем обновлённого пользователя
     this.server.emit(E_LUSubscribe.getLobbyUser, { user })
   }
+
+  @SubscribeMessage(E_Emit.sendMessageRoom)
+  sendMessageToRoom(
+    client: Socket,
+    { roomId, text }: I_EmitPayload[E_Emit.sendMessageRoom],
+  ): void {
+    const message = this.lobbyRooms.createMessage(client.id, roomId, text)
+
+    this.server.to(roomId).emit(E_Subscribe.getRoomMessage, { message })
+  }
 }

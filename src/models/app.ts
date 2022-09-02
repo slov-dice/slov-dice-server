@@ -80,7 +80,7 @@ export interface I_RoomUser {
   socketId: T_SocketId
 }
 
-export interface I_RoomChat {
+export interface I_RoomMessage {
   id: string
   authorId: T_UserId
   author: string
@@ -100,5 +100,5 @@ export interface I_PreviewRoom {
 
 export interface I_FullRoom extends I_PreviewRoom {
   password: string
-  messages: I_RoomChat[]
+  messages: I_RoomMessage[]
 }

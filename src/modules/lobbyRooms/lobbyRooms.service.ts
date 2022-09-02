@@ -2,11 +2,13 @@ import { Injectable } from '@nestjs/common'
 import { v4 } from 'uuid'
 
 import {
+  E_RoomMessageType,
   E_RoomType,
   E_StatusServerMessage,
   I_FullRoom,
   I_LobbyUser,
   I_PreviewRoom,
+  I_RoomMessage,
   T_RoomId,
   T_SocketId,
   T_UserId,
@@ -145,5 +147,40 @@ export class LobbyRoomsService {
 
   findRoomById(id: T_RoomId): I_FullRoom {
     return this.rooms.find((room) => room.id === id)
+  }
+
+  createMessage(
+    socketId: T_SocketId,
+    roomId: T_RoomId,
+    text: string,
+  ): I_RoomMessage {
+    const room = this.findRoomById(roomId)
+    const user = this.lobbyUsers.findBySocketId(socketId)
+
+    let modifiedText = text.trim()
+
+    const isCommand = text.startsWith('/')
+    if (isCommand) modifiedText = this.createCommand(modifiedText)
+
+    const messageId = v4()
+    const message: I_RoomMessage = {
+      id: messageId,
+      authorId: user.id,
+      author: user.nickname,
+      text: modifiedText,
+      type: isCommand ? E_RoomMessageType.command : E_RoomMessageType.custom,
+    }
+
+    room.messages.push(message)
+
+    return message
+  }
+
+  createCommand(text: string): string {
+    const dices: number = +text.split('d')[0].substring(1) || 1
+    const edges: number = +text.split('d')[1] || 6
+    const getRandomValue = () => Math.floor(Math.random() * edges) + 1
+    const values = [...new Array(dices)].map(getRandomValue)
+    return `[${values.join(' ')}]`
   }
 }

@@ -226,9 +226,19 @@ export class AuthService {
     }
   }
 
-  async check(at: T_AccessToken, rt: T_RefreshToken, response: Response) {
-    // Если access token протух
-    await this.refreshTokens(rt, response)
+  async check(ac: T_AccessToken, rt: T_RefreshToken) {
+    const tokenData: TokenData = this.jwtService.verify(rt, {
+      secret: this.config.get('JWT_SECRET_RT'),
+    })
+
+    const user = await this.usersService.findUnique('id', tokenData.sub)
+
+    return {
+      accessToken: ac,
+      id: user.id,
+      nickname: user.nickname,
+      email: user.email,
+    }
   }
 
   logout(userId: number, response: Response, dto: LogoutDto) {

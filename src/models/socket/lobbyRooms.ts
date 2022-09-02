@@ -2,6 +2,7 @@ import {
   E_RoomType,
   E_StatusServerMessage,
   I_FullRoom,
+  I_RoomMessage,
   I_PreviewRoom,
   T_LocaleServerMessage,
   T_RoomId,
@@ -12,6 +13,7 @@ export enum E_Subscribe {
   getPreviewRooms = 'getPreviewRooms',
   getPreviewRoom = 'getPreviewRoom',
   getFullRoom = 'getFullRoom',
+  getRoomMessage = 'getRoomMessage',
 }
 
 export interface I_SubscriptionData {
@@ -22,6 +24,7 @@ export interface I_SubscriptionData {
     status?: E_StatusServerMessage
     message?: T_LocaleServerMessage
   }
+  [E_Subscribe.getRoomMessage]: { message: I_RoomMessage }
 }
 
 export enum E_Emit {
@@ -30,6 +33,7 @@ export enum E_Emit {
   joinRoom = 'joinRoom',
   rejoinRoom = 'rejoinRoom',
   leaveRoom = 'leaveRoom',
+  sendMessageRoom = 'sendMessageRoom',
 }
 
 export interface I_EmitPayload {
@@ -49,5 +53,9 @@ export interface I_EmitPayload {
   }
   [E_Emit.leaveRoom]: {
     roomId: T_RoomId
+  }
+  [E_Emit.sendMessageRoom]: {
+    roomId: T_RoomId
+    text: string
   }
 }
