@@ -1,3 +1,3 @@
-export * from './get-current-user.decorator'
-export * from './get-current-user-id.decorator'
-export * from './get-req-rt.decorator'
+export * from './getCurrentUser.decorator'
+export * from './getCurrentUserId.decorator'
+export * from './getReqRT.decorator'

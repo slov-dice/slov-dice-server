@@ -29,7 +29,7 @@ import { TokenData } from './models/tokens.type'
 import { UsersService } from 'modules/users/users.service'
 import { MailService } from 'modules/mail/mail.service'
 import { LobbyUsersService } from 'modules/lobbyUsers/lobbyUsers.service'
-import { E_AuthType } from 'models/app'
+import { E_AuthType, T_AccessToken, T_RefreshToken } from 'models/app'
 import { t } from 'languages'
 
 @Injectable()
@@ -165,7 +165,7 @@ export class AuthService {
     // Аутентификация
     if (user) {
       if (user.from !== authType)
-        throw new ForbiddenException('This email already exist')
+        throw new ForbiddenException(t('auth.error.mailRegistered'))
 
       const tokens = await this.generateTokens(user.id, user.email)
       this.setCookies(tokens.access_token, tokens.refresh_token, response)
@@ -226,6 +226,11 @@ export class AuthService {
     }
   }
 
+  async check(at: T_AccessToken, rt: T_RefreshToken, response: Response) {
+    // Если access token протух
+    await this.refreshTokens(rt, response)
+  }
+
   logout(userId: number, response: Response, dto: LogoutDto) {
     if (dto.from === E_AuthType.guest) {
       this.usersService.removeById(userId)
@@ -234,28 +239,28 @@ export class AuthService {
     response.clearCookie('refresh_token')
   }
 
-  async refreshTokens(refresh_token: string, res: Response) {
+  async refreshTokens(rt: T_RefreshToken, response: Response) {
     try {
       // RT не найден в куки
-      if (!refresh_token) {
-        throw new UnauthorizedException('Unauthorized!')
+      if (!rt) {
+        throw new UnauthorizedException(t('auth.error.unauthorized'))
       }
 
-      const tokenData: TokenData = this.jwtService.verify(refresh_token, {
+      const tokenData: TokenData = this.jwtService.verify(rt, {
         secret: this.config.get('JWT_SECRET_RT'),
       })
 
       if (!tokenData) {
-        throw new UnauthorizedException('Unauthorized!')
+        throw new UnauthorizedException(t('auth.error.unauthorized'))
       }
 
       const user = await this.usersService.findUnique('id', tokenData.sub)
       const tokens = await this.generateTokens(user.id, user.email)
 
-      this.setCookies(tokens.access_token, tokens.refresh_token, res)
+      this.setCookies(tokens.access_token, tokens.refresh_token, response)
       return tokens
     } catch {
-      throw new NotFoundException('Refresh token expired')
+      throw new NotFoundException(t('auth.error.refreshTokenExpired'))
     }
   }
 

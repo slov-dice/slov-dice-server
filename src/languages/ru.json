@@ -4,6 +4,7 @@
       "userExist": "Пользователь уже существует",
       "userNotFound": "Пользователь не найден",
       "userRegisteredByThirdParty": "Эта почта зарегистрированная через сторонний сервис",
+      "mailRegistered": "Эта почта уже зарегистрирована",
       "wrongPassword": "Неверный пароль",
       "mailNotVerified": "Эта почта не подтверждена",
       "sessionNotFound": "Сессия не найдена",
@@ -11,7 +12,8 @@
       "passwordsMatch": "Пароли совпадают",
       "letterSendingError": "Ошибка при отправке письма",
       "invalidToken": "Неверный токен для верификации",
-      "unauthorized": "Неавторизованн"
+      "unauthorized": "Неавторизованн",
+      "refreshTokenExpired": "Токен обновления прожил своё"
     },
     "success": {
       "checkEmail": "Код был успешно отправлен на вашу почту!",

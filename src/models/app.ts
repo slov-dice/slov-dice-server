@@ -2,6 +2,7 @@ export type T_SocketId = string
 export type T_UserId = number
 export type T_RoomId = string
 export type T_AccessToken = string
+export type T_RefreshToken = string
 
 export type T_Tokens = {
   access_token: string

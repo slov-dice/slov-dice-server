@@ -23,6 +23,8 @@ import { T_AuthResponse, T_ThirdPartyUserData } from './models/response.type'
 
 import { GetCurrentUserId, GetReqRT } from 'decorators'
 import { AtGuard } from 'guards'
+import { GetReqAT } from 'decorators/getReqAT.decorator'
+import { T_AccessToken, T_RefreshToken } from 'models/app'
 
 @Controller('auth')
 export class AuthController {
@@ -46,6 +48,18 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ): Promise<T_AuthResponse> {
     return this.authService.signInLocal(dto, response)
+  }
+
+  // Проверка авторизации
+  @Post('check')
+  @HttpCode(HttpStatus.OK)
+  checkAuth(
+    @GetReqAT() at: T_AccessToken,
+    @GetReqRT() rt: T_RefreshToken,
+    @Res({ passthrough: true }) response: Response,
+  ): any {
+    console.log('check', at, rt)
+    return this.authService.check(at, rt, response)
   }
 
   // Сторонняя авторизация
@@ -95,7 +109,7 @@ export class AuthController {
     return this.authService.logout(userId, response, dto)
   }
 
-  // Обновление access_token
+  // Обновление токенов
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   refreshTokens(
