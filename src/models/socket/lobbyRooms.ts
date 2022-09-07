@@ -13,6 +13,7 @@ export enum E_Subscribe {
   getPreviewRooms = 'getPreviewRooms',
   getPreviewRoom = 'getPreviewRoom',
   getFullRoom = 'getFullRoom',
+  getFullRoomRejoin = 'getFullRoomRejoin',
   getRoomMessage = 'getRoomMessage',
 }
 
@@ -23,6 +24,9 @@ export interface I_SubscriptionData {
     fullRoom?: I_FullRoom
     status?: E_StatusServerMessage
     message?: T_LocaleServerMessage
+  }
+  [E_Subscribe.getFullRoomRejoin]: {
+    fullRoom: I_FullRoom
   }
   [E_Subscribe.getRoomMessage]: { message: I_RoomMessage }
 }

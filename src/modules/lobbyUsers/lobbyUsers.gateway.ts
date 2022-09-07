@@ -85,8 +85,7 @@ export class LobbyUsersGateway
 
       // Подключаем пользователя к сокет комнате
       client.join(fullRoom.id)
-
-      client.emit(E_LRSubscribe.getFullRoom, { fullRoom })
+      client.emit(E_LRSubscribe.getFullRoomRejoin, { fullRoom })
 
       // Отправляем обновлённую полную комнату ВСЕМ в комнате
       client.to(fullRoom.id).emit(E_LRSubscribe.getFullRoom, { fullRoom })
