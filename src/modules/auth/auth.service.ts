@@ -24,7 +24,7 @@ import {
   T_ThirdPartyUserData,
   T_Tokens,
 } from './models/response.type'
-import { TokenParams } from './models/params.type'
+import { T_TokenParams } from './models/params.type'
 import { TokenData } from './models/tokens.type'
 import { UsersService } from 'modules/users/users.service'
 import { MailService } from 'modules/mail/mail.service'
@@ -54,6 +54,7 @@ export class AuthService {
     )
 
     // Если пользователь найден
+    // 401
     if (userExists) throw new ForbiddenException(t('auth.error.userExist'))
 
     const hashedPassword = await argon2.hash(dto.password)
@@ -120,7 +121,7 @@ export class AuthService {
     dto: ThirdPartyDto,
   ): Promise<AxiosResponse<any, any>> {
     const url = this.getTokenUrlThirdParty(dto.authType)
-    const params: TokenParams = {
+    const params: T_TokenParams = {
       client_id: this.config.get(`${dto.authType}_CLIENT_ID`),
       client_secret: this.config.get(`${dto.authType}_CLIENT_SECRET`),
       redirect_uri: this.config.get('AUTH_REDIRECT_URL'),
