@@ -18,14 +18,14 @@ import {
   ThirdPartyDto,
   EmailConfirmDto,
   LogoutDto,
-} from './dto/auth.dto'
+} from './dtos'
 import {
   T_AuthResponse,
   T_ThirdPartyUserData,
   T_Tokens,
-} from './models/response.type'
-import { T_TokenParams } from './models/params.type'
-import { TokenData } from './models/tokens.type'
+} from './models/response.model'
+import { T_TokenParams } from './models/params.model'
+import { TokenData } from './models/tokens.model'
 import { UsersService } from 'modules/users/users.service'
 import { MailService } from 'modules/mail/mail.service'
 import { LobbyUsersService } from 'modules/lobbyUsers/lobbyUsers.service'

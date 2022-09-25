@@ -18,8 +18,8 @@ import {
   ThirdPartyDto,
   EmailConfirmDto,
   LogoutDto,
-} from './dto/auth.dto'
-import { T_AuthResponse, T_ThirdPartyUserData } from './models/response.type'
+} from './dtos'
+import { T_AuthResponse, T_ThirdPartyUserData } from './models/response.model'
 
 import { GetCurrentUserId, GetReqRT } from 'decorators'
 import { AtGuard } from 'guards'

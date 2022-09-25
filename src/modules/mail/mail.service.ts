@@ -11,9 +11,7 @@ export class MailService {
   ) {}
 
   sendUserConfirmation(user: User, token: string) {
-    const url = `${this.config.get(
-      'CLIENT_SERVER',
-    )}/verification?token=${token}`
+    const url = `${this.config.get('CLIENT_URL')}/verification?token=${token}`
 
     return this.mailerService.sendMail({
       to: user.email,
