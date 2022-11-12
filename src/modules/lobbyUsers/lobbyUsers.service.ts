@@ -7,7 +7,7 @@ import {
   T_SocketId,
   T_UserId,
   E_UserStatus,
-} from 'models/app'
+} from 'models/shared/app'
 import { UsersService } from 'modules/users/users.service'
 
 @Injectable()

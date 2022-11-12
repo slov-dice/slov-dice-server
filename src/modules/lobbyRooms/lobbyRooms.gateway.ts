@@ -11,15 +11,15 @@ import { Socket, Server } from 'socket.io'
 
 import { LobbyRoomsService } from './lobbyRooms.service'
 
+import { E_StatusServerMessage } from 'models/shared/app'
 import {
   E_Emit,
   I_EmitPayload,
   E_Subscribe,
   I_SubscriptionData,
-} from 'models/socket/lobbyRooms'
-import { E_Subscribe as E_LUSubscribe } from 'models/socket/lobbyUsers'
+} from 'models/shared/socket/lobbyRooms'
+import { E_Subscribe as E_LUSubscribe } from 'models/shared/socket/lobbyUsers'
 import { t } from 'languages'
-import { E_StatusServerMessage } from 'models/app'
 import { LobbyUsersService } from 'modules/lobbyUsers/lobbyUsers.service'
 
 @WebSocketGateway({ cors: true })

@@ -1,4 +1,4 @@
-import { T_SocketDataStatus } from 'models/app'
+import { T_SocketDataStatus } from 'models/shared/app'
 
 export enum E_Subscribe {
   getRestoreCheckEmail = 'getRestoreCheckEmail',

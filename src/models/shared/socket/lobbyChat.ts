@@ -1,4 +1,4 @@
-import { I_LobbyMessage } from 'models/app'
+import { I_LobbyMessage } from 'models/shared/app'
 
 export enum E_Subscribe {
   getLobbyMessages = 'getLobbyMessages',

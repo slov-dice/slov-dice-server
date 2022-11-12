@@ -18,7 +18,7 @@ import {
   I_EmitPayload,
   E_Subscribe,
   I_SubscriptionData,
-} from 'models/socket/lobbyChat'
+} from 'models/shared/socket/lobbyChat'
 
 @WebSocketGateway({ cors: true })
 export class LobbyChatGateway

@@ -2,7 +2,7 @@ import { User } from '@prisma/client'
 import { Injectable } from '@nestjs/common'
 
 import { PrismaService } from 'modules/prisma/prisma.service'
-import { E_AuthType } from 'models/app'
+import { E_AuthType } from 'models/shared/app'
 
 @Injectable()
 export class UsersService {

@@ -12,13 +12,17 @@ import * as argon2 from 'argon2'
 
 import { UsersService } from 'modules/users/users.service'
 import { MailService } from 'modules/mail/mail.service'
-import { E_AuthType, E_StatusServerMessage, T_SocketId } from 'models/app'
+import {
+  E_AuthType,
+  E_StatusServerMessage,
+  T_SocketId,
+} from 'models/shared/app'
 import {
   E_Emit,
   E_Subscribe,
   I_EmitPayload,
   I_SubscriptionData,
-} from 'models/socket/restore'
+} from 'models/shared/socket/restore'
 import { t } from 'languages'
 import { WsThrottlerGuard } from 'guards/wsThrottler.guard'
 

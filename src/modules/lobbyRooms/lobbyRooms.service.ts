@@ -12,9 +12,12 @@ import {
   T_RoomId,
   T_SocketId,
   T_UserId,
-} from 'models/app'
+} from 'models/shared/app'
 import { LobbyUsersService } from 'modules/lobbyUsers/lobbyUsers.service'
-import { E_Subscribe, I_SubscriptionData } from 'models/socket/lobbyRooms'
+import {
+  E_Subscribe,
+  I_SubscriptionData,
+} from 'models/shared/socket/lobbyRooms'
 import { t } from 'languages'
 
 @Injectable()
@@ -51,6 +54,22 @@ export class LobbyRoomsService {
       currentSize: 1,
       users: [{ userId: user.id, socketId: user.socketId }],
       messages: [],
+      game: {
+        character: {
+          window: {
+            characters: [],
+          },
+          settings: {
+            bars: [],
+            effects: [],
+            permissions: {
+              'master-update-characters': false,
+              'player-update-characters': false,
+            },
+            specials: [],
+          },
+        },
+      },
     }
 
     const updatedUser = this.lobbyUsers.setInRoomBySocketId(socketId)

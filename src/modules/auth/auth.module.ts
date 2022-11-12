@@ -4,6 +4,7 @@ import { HttpModule } from '@nestjs/axios'
 
 import { AuthController } from './auth.controller'
 import { AuthService } from './auth.service'
+import { TokenService } from './token.service'
 import { AuthGateway } from './auth.gateway'
 import { AtStrategy, RtStrategy } from './strategies'
 
@@ -14,7 +15,14 @@ import { MailModule } from 'modules/mail/mail.module'
 @Module({
   imports: [JwtModule.register({}), LobbyUsersModule, HttpModule, MailModule],
   controllers: [AuthController],
-  providers: [AuthService, AtStrategy, RtStrategy, UsersService, AuthGateway],
+  providers: [
+    AuthService,
+    TokenService,
+    AtStrategy,
+    RtStrategy,
+    UsersService,
+    AuthGateway,
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}

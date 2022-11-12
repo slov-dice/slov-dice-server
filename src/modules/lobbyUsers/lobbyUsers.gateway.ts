@@ -16,15 +16,15 @@ import {
   E_Subscribe,
   I_EmitPayload,
   I_SubscriptionData,
-} from 'models/socket/lobbyUsers'
+} from 'models/shared/socket/lobbyUsers'
 import {
   E_Subscribe as E_LRSubscribe,
   I_SubscriptionData as I_LRSubscriptionData,
-} from 'models/socket/lobbyRooms'
+} from 'models/shared/socket/lobbyRooms'
 
 import { LobbyRoomsService } from 'modules/lobbyRooms/lobbyRooms.service'
 import { t } from 'languages'
-import { E_StatusServerMessage, I_LobbyUser } from 'models/app'
+import { E_StatusServerMessage, I_LobbyUser } from 'models/shared/app'
 
 @WebSocketGateway({ cors: true })
 export class LobbyUsersGateway

@@ -1,4 +1,4 @@
-import { I_LobbyUser, T_RoomId, T_UserId } from 'models/app'
+import { I_LobbyUser, T_RoomId, T_UserId } from 'models/shared/app'
 
 export enum E_Subscribe {
   getLobbyUsers = 'getLobbyUsers',

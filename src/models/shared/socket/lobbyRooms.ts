@@ -7,7 +7,7 @@ import {
   T_LocaleServerMessage,
   T_RoomId,
   T_UserId,
-} from 'models/app'
+} from 'models/shared/app'
 
 export enum E_Subscribe {
   getPreviewRooms = 'getPreviewRooms',

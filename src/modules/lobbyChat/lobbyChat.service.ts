@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { v4 } from 'uuid'
 
-import { I_LobbyMessage, I_LobbyUser } from 'models/app'
+import { I_LobbyMessage, I_LobbyUser } from 'models/shared/app'
 
 @Injectable()
 export class LobbyChatService {

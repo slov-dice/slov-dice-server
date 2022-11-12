@@ -1,4 +1,4 @@
-import { T_LocaleServerMessage } from 'models/app'
+import { T_LocaleServerMessage } from 'models/shared/app'
 
 export type T_Tokens = {
   access_token: string

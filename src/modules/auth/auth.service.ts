@@ -19,17 +19,15 @@ import {
   EmailConfirmDto,
   LogoutDto,
 } from './dtos'
-import {
-  T_AuthResponse,
-  T_ThirdPartyUserData,
-  T_Tokens,
-} from './models/response.model'
+import { T_AuthResponse, T_ThirdPartyUserData } from './models/response.model'
 import { T_TokenParams } from './models/params.model'
 import { TokenData } from './models/tokens.model'
+import { TokenService } from './token.service'
+
 import { UsersService } from 'modules/users/users.service'
 import { MailService } from 'modules/mail/mail.service'
 import { LobbyUsersService } from 'modules/lobbyUsers/lobbyUsers.service'
-import { E_AuthType, T_AccessToken, T_RefreshToken } from 'models/app'
+import { E_AuthType, T_AccessToken, T_RefreshToken } from 'models/shared/app'
 import { t } from 'languages'
 
 @Injectable()
@@ -41,6 +39,7 @@ export class AuthService {
     private httpService: HttpService,
     private usersService: UsersService,
     private mailService: MailService,
+    private tokenService: TokenService,
   ) {}
 
   // Регистрация
@@ -65,14 +64,17 @@ export class AuthService {
       E_AuthType.email,
     )
 
-    const tokens = await this.generateTokens(user.id, user.email)
+    const tokens = await this.tokenService.generateTokens(user.id, user.email)
     this.setCookies(tokens.access_token, tokens.refresh_token, response)
 
     // Добавление сокета
     this.lobbyUsers.create(user)
 
     // Email верификация
-    const verifyToken = await this.generateMailToken(user.id, user.email)
+    const verifyToken = await this.tokenService.generateMailToken(
+      user.id,
+      user.email,
+    )
     await this.mailService.sendUserConfirmation(user, verifyToken)
 
     return {
@@ -104,7 +106,7 @@ export class AuthService {
     if (!passwordMatches)
       throw new ForbiddenException(t('auth.error.wrongPassword'))
 
-    const tokens = await this.generateTokens(user.id, user.email)
+    const tokens = await this.tokenService.generateTokens(user.id, user.email)
     this.setCookies(tokens.access_token, tokens.refresh_token, response)
 
     return {
@@ -168,7 +170,7 @@ export class AuthService {
       if (user.from !== authType)
         throw new ForbiddenException(t('auth.error.mailRegistered'))
 
-      const tokens = await this.generateTokens(user.id, user.email)
+      const tokens = await this.tokenService.generateTokens(user.id, user.email)
       this.setCookies(tokens.access_token, tokens.refresh_token, response)
       return {
         accessToken: tokens.access_token,
@@ -189,7 +191,7 @@ export class AuthService {
         authType,
       )
 
-      const tokens = await this.generateTokens(user.id, user.email)
+      const tokens = await this.tokenService.generateTokens(user.id, user.email)
       this.setCookies(tokens.access_token, tokens.refresh_token, response)
       this.lobbyUsers.create(user)
 
@@ -214,7 +216,7 @@ export class AuthService {
       E_AuthType.guest,
     )
 
-    const tokens = await this.generateTokens(user.id, user.email)
+    const tokens = await this.tokenService.generateTokens(user.id, user.email)
     this.setCookies(tokens.access_token, tokens.refresh_token, response)
     this.lobbyUsers.create(user)
 
@@ -266,7 +268,7 @@ export class AuthService {
       }
 
       const user = await this.usersService.findUnique('id', tokenData.sub)
-      const tokens = await this.generateTokens(user.id, user.email)
+      const tokens = await this.tokenService.generateTokens(user.id, user.email)
 
       this.setCookies(tokens.access_token, tokens.refresh_token, response)
       return tokens
@@ -304,49 +306,6 @@ export class AuthService {
       sameSite: 'none',
       secure: true,
     })
-  }
-
-  async generateTokens(userId: number, email: string): Promise<T_Tokens> {
-    const [at, rt] = await Promise.all([
-      this.jwtService.signAsync(
-        {
-          sub: userId,
-          email,
-        },
-        {
-          secret: this.config.get('JWT_SECRET_AT'),
-          expiresIn: 15 * 60, // 15 минут
-        },
-      ),
-      this.jwtService.signAsync(
-        {
-          sub: userId,
-          email,
-        },
-        {
-          secret: this.config.get('JWT_SECRET_RT'),
-          expiresIn: 60 * 60 * 24 * 7, // неделя
-        },
-      ),
-    ])
-
-    return {
-      access_token: at,
-      refresh_token: rt,
-    }
-  }
-
-  async generateMailToken(userId: number, email: string): Promise<string> {
-    return await this.jwtService.signAsync(
-      {
-        sub: userId,
-        email,
-      },
-      {
-        secret: this.config.get('JWT_SECRET_MAIL'),
-        expiresIn: 60 * 60, // 1 час
-      },
-    )
   }
 
   getTokenUrlThirdParty(authType: E_AuthType): string {

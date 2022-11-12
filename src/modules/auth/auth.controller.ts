@@ -24,7 +24,7 @@ import { T_AuthResponse, T_ThirdPartyUserData } from './models/response.model'
 import { GetCurrentUserId, GetReqRT } from 'decorators'
 import { AtGuard } from 'guards'
 import { GetReqAT } from 'decorators/getReqAT.decorator'
-import { T_AccessToken, T_RefreshToken } from 'models/app'
+import { T_AccessToken, T_RefreshToken } from 'models/shared/app'
 
 @Controller('auth')
 export class AuthController {

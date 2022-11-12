@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsString } from 'class-validator'
 
-import { E_AuthType } from 'models/app'
+import { E_AuthType } from 'models/shared/app'
 
 export class ThirdPartyDto {
   @IsString()

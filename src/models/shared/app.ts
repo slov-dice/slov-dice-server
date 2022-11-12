@@ -1,3 +1,5 @@
+import { I_Character, I_CharactersSettings } from './game/character'
+
 export type T_SocketId = string
 export type T_UserId = number
 export type T_RoomId = string
@@ -101,4 +103,12 @@ export interface I_PreviewRoom {
 export interface I_FullRoom extends I_PreviewRoom {
   password: string
   messages: I_RoomMessage[]
+  game: {
+    character: {
+      window: {
+        characters: I_Character[]
+      }
+      settings: I_CharactersSettings
+    }
+  }
 }
