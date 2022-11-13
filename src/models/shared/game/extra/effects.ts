@@ -1,4 +1,4 @@
-export enum E_GameIcon {
+export enum E_EffectIcon {
   brokenBone = 'brokenBone',
   vomiting = 'vomiting',
   muscleFat = 'muscleFat',

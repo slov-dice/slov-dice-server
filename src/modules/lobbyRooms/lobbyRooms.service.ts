@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import { v4 } from 'uuid'
 
+import { lobbyRoomGameInstance } from './data'
+
 import {
   E_RoomMessageType,
   E_RoomType,
@@ -54,22 +56,7 @@ export class LobbyRoomsService {
       currentSize: 1,
       users: [{ userId: user.id, socketId: user.socketId }],
       messages: [],
-      game: {
-        character: {
-          window: {
-            characters: [],
-          },
-          settings: {
-            bars: [],
-            effects: [],
-            permissions: {
-              'master-update-characters': false,
-              'player-update-characters': false,
-            },
-            specials: [],
-          },
-        },
-      },
+      game: lobbyRoomGameInstance,
     }
 
     const updatedUser = this.lobbyUsers.setInRoomBySocketId(socketId)
@@ -160,7 +147,7 @@ export class LobbyRoomsService {
 
   fullToPreviewRoom(room: I_FullRoom): I_PreviewRoom {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, messages, ...rest } = room
+    const { password, messages, game, ...rest } = room
     return rest
   }
 

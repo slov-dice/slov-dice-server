@@ -1,7 +1,17 @@
-import { E_GameIcon } from '../extra/effects'
+import { E_EffectIcon } from '../extra/effects'
+
+import { T_LocaleText } from 'models/shared/app'
 
 export type T_CharacterId = string
-export type T_EffectId = string
+export type T_CharacterEffectId = string
+export type T_CharacterBarId = string
+export type T_CharacterSpecialId = string
+
+export interface I_CharactersSettings {
+  bars: T_BaseCharacterBar[]
+  specials: T_BaseCharacterSpecial[]
+  effects: T_BaseCharacterEffect[]
+}
 
 export interface I_Character {
   id: T_CharacterId
@@ -11,21 +21,29 @@ export interface I_Character {
   level: number
   bars: T_CharacterBar[]
   specials: T_CharacterSpecial[]
-  effects: T_EffectId[]
+  effects: T_CharacterEffectId[]
 }
 
 export type T_CharacterBar = {
-  // name: string
-  id: string
+  id: T_CharacterBarId
   current: number
   max: number
-  // color: string
 }
 
 export type T_CharacterSpecial = {
-  id: string
-  // name: string
+  id: T_CharacterSpecialId
   current: number
+}
+
+export type T_BaseCharacterBar = {
+  id: T_CharacterBarId
+  name: T_LocaleText
+  color: string
+}
+
+export type T_BaseCharacterSpecial = {
+  id: T_CharacterSpecialId
+  name: T_LocaleText
 }
 
 export enum E_EffectType {
@@ -34,20 +52,10 @@ export enum E_EffectType {
   positive = 'positive',
 }
 
-export type T_CharacterEffect = {
-  id: T_EffectId
-  name: string
-  description: string
-  icon: E_GameIcon
+export type T_BaseCharacterEffect = {
+  id: T_CharacterEffectId
+  name: T_LocaleText
+  description: T_LocaleText
+  icon: E_EffectIcon
   type: E_EffectType
-}
-
-export interface I_CharactersSettings {
-  permissions: {
-    'player-update-characters': boolean
-    'master-update-characters': boolean
-  }
-  bars: T_CharacterBar[]
-  specials: T_CharacterSpecial[]
-  effects: T_CharacterEffect[]
 }

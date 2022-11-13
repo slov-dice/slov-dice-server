@@ -4,7 +4,7 @@ import {
   I_FullRoom,
   I_RoomMessage,
   I_PreviewRoom,
-  T_LocaleServerMessage,
+  T_LocaleText,
   T_RoomId,
   T_UserId,
 } from 'models/shared/app'
@@ -23,7 +23,7 @@ export interface I_SubscriptionData {
   [E_Subscribe.getFullRoom]: {
     fullRoom?: I_FullRoom
     status?: E_StatusServerMessage
-    message?: T_LocaleServerMessage
+    message?: T_LocaleText
   }
   [E_Subscribe.getFullRoomRejoin]: {
     fullRoom: I_FullRoom

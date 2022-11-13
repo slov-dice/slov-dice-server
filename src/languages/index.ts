@@ -1,6 +1,6 @@
 import * as RU from './ru.json'
 import * as EN from './en.json'
-import { E_Locale, T_LocaleServerMessage } from 'models/shared/app'
+import { E_Locale, T_LocaleText } from 'models/shared/app'
 
 const translation = { [E_Locale.ru]: RU, [E_Locale.en]: EN }
 
@@ -9,7 +9,7 @@ export const t = (key: string) => {
   return getNestedTranslation(keys)
 }
 
-const getNestedTranslation = (keys: string[]): T_LocaleServerMessage => {
+const getNestedTranslation = (keys: string[]): T_LocaleText => {
   const RU = keys.reduce((obj: any, key: string) => {
     return obj?.[key] || ''
   }, translation[E_Locale.ru])

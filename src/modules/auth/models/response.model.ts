@@ -1,4 +1,4 @@
-import { T_LocaleServerMessage } from 'models/shared/app'
+import { T_LocaleText } from 'models/shared/app'
 
 export type T_Tokens = {
   access_token: string
@@ -7,7 +7,7 @@ export type T_Tokens = {
 
 export type T_AuthResponse = {
   accessToken: string
-  message?: T_LocaleServerMessage
+  message?: T_LocaleText
   id: number
   nickname: string
   email: string
@@ -19,7 +19,7 @@ export type T_ThirdPartyUserData = {
 }
 
 export type T_ConfirmResponse = {
-  message: T_LocaleServerMessage
+  message: T_LocaleText
 }
 
 // Ответ от discord.com/api/v6/users/@me
