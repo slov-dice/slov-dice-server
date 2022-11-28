@@ -8,6 +8,7 @@ import {
   T_RoomId,
   T_UserId,
 } from 'models/shared/app'
+import { T_BaseCharacterBar } from 'models/shared/game/character'
 
 export enum E_Subscribe {
   getPreviewRooms = 'getPreviewRooms',
@@ -15,6 +16,9 @@ export enum E_Subscribe {
   getFullRoom = 'getFullRoom',
   getFullRoomRejoin = 'getFullRoomRejoin',
   getRoomMessage = 'getRoomMessage',
+
+  // Characters Window
+  getCharactersWindowSettingsBars = 'getCharactersWindowSettingsBars',
 }
 
 export interface I_SubscriptionData {
@@ -29,6 +33,13 @@ export interface I_SubscriptionData {
     fullRoom: I_FullRoom
   }
   [E_Subscribe.getRoomMessage]: { message: I_RoomMessage }
+
+  // Characters Window
+  [E_Subscribe.getCharactersWindowSettingsBars]: {
+    message: T_LocaleText
+    status: E_StatusServerMessage
+    bars: T_BaseCharacterBar[]
+  }
 }
 
 export enum E_Emit {
@@ -38,6 +49,9 @@ export enum E_Emit {
   rejoinRoom = 'rejoinRoom',
   leaveRoom = 'leaveRoom',
   sendMessageRoom = 'sendMessageRoom',
+
+  // Characters Window
+  updateCharactersWindowSettingsBars = 'updateCharactersWindowSettingsBars',
 }
 
 export interface I_EmitPayload {
@@ -61,5 +75,11 @@ export interface I_EmitPayload {
   [E_Emit.sendMessageRoom]: {
     roomId: T_RoomId
     text: string
+  }
+
+  // Characters Window
+  [E_Emit.updateCharactersWindowSettingsBars]: {
+    roomId: T_RoomId
+    bars: T_BaseCharacterBar[]
   }
 }

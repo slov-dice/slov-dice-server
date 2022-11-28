@@ -21,6 +21,7 @@ import {
   I_SubscriptionData,
 } from 'models/shared/socket/lobbyRooms'
 import { t } from 'languages'
+import { T_BaseCharacterBar } from 'models/shared/game/character'
 
 @Injectable()
 export class LobbyRoomsService {
@@ -151,8 +152,17 @@ export class LobbyRoomsService {
     return rest
   }
 
-  findRoomById(id: T_RoomId): I_FullRoom {
-    return this.rooms.find((room) => room.id === id)
+  findRoomById(roomId: T_RoomId): I_FullRoom {
+    return this.rooms.find((room) => room.id === roomId)
+  }
+
+  updateCharactersWindowSettingsBars(
+    roomId: T_RoomId,
+    bars: T_BaseCharacterBar[],
+  ): T_BaseCharacterBar[] {
+    const room = this.findRoomById(roomId)
+    room.game.characters.settings.bars = bars
+    return room.game.characters.settings.bars
   }
 
   createMessage(

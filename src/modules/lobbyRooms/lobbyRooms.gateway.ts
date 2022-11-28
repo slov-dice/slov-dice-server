@@ -167,4 +167,26 @@ export class LobbyRoomsGateway
 
     this.server.to(roomId).emit(E_Subscribe.getRoomMessage, { message })
   }
+
+  @SubscribeMessage(E_Emit.updateCharactersWindowSettingsBars)
+  updateCharactersWindowSettingsBars(
+    client: Socket,
+    { roomId, bars }: I_EmitPayload[E_Emit.updateCharactersWindowSettingsBars],
+  ): void {
+    const roomBars = this.lobbyRooms.updateCharactersWindowSettingsBars(
+      roomId,
+      bars,
+    )
+
+    const toPayload: I_SubscriptionData[E_Subscribe.getCharactersWindowSettingsBars] =
+      {
+        bars: roomBars,
+        message: t('room.success.characters.settings.bars'),
+        status: E_StatusServerMessage.info,
+      }
+
+    this.server
+      .to(roomId)
+      .emit(E_Subscribe.getCharactersWindowSettingsBars, toPayload)
+  }
 }
