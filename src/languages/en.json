@@ -27,7 +27,12 @@
   "room": {
     "success": {
       "created": "Room created successfully",
-      "join": "Successfully join"
+      "join": "Successfully join",
+      "characters": {
+        "settings": {
+          "bars": "The character bars have changed"
+        }
+      }
     },
     "info": {
       "userJoin": "New user join to party!",
