@@ -30,7 +30,8 @@
       "join": "Successfully join",
       "characters": {
         "settings": {
-          "bars": "The character bars have changed"
+          "bars": "The character bars have changed",
+          "specials": "Specials of the characters have changed"
         }
       }
     },

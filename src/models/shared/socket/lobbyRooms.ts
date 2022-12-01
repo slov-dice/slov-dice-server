@@ -8,7 +8,11 @@ import {
   T_RoomId,
   T_UserId,
 } from 'models/shared/app'
-import { T_BaseCharacterBar } from 'models/shared/game/character'
+import {
+  T_BaseCharacterBar,
+  T_BaseCharacterEffect,
+  T_BaseCharacterSpecial,
+} from 'models/shared/game/character'
 
 export enum E_Subscribe {
   getPreviewRooms = 'getPreviewRooms',
@@ -19,6 +23,8 @@ export enum E_Subscribe {
 
   // Characters Window
   getCharactersWindowSettingsBars = 'getCharactersWindowSettingsBars',
+  getCharactersWindowSettingsSpecials = 'getCharactersWindowSettingsSpecials',
+  getCharactersWindowSettingsEffects = 'getCharactersWindowSettingsEffects',
 }
 
 export interface I_SubscriptionData {
@@ -40,6 +46,16 @@ export interface I_SubscriptionData {
     status: E_StatusServerMessage
     bars: T_BaseCharacterBar[]
   }
+  [E_Subscribe.getCharactersWindowSettingsSpecials]: {
+    message: T_LocaleText
+    status: E_StatusServerMessage
+    specials: T_BaseCharacterSpecial[]
+  }
+  [E_Subscribe.getCharactersWindowSettingsEffects]: {
+    message: T_LocaleText
+    status: E_StatusServerMessage
+    effects: T_BaseCharacterEffect[]
+  }
 }
 
 export enum E_Emit {
@@ -52,6 +68,8 @@ export enum E_Emit {
 
   // Characters Window
   updateCharactersWindowSettingsBars = 'updateCharactersWindowSettingsBars',
+  updateCharactersWindowSettingsSpecials = 'updateCharactersWindowSettingsSpecials',
+  updateCharactersWindowSettingsEffects = 'updateCharactersWindowSettingsEffects',
 }
 
 export interface I_EmitPayload {
@@ -81,5 +99,13 @@ export interface I_EmitPayload {
   [E_Emit.updateCharactersWindowSettingsBars]: {
     roomId: T_RoomId
     bars: T_BaseCharacterBar[]
+  }
+  [E_Emit.updateCharactersWindowSettingsSpecials]: {
+    roomId: T_RoomId
+    specials: T_BaseCharacterSpecial[]
+  }
+  [E_Emit.updateCharactersWindowSettingsEffects]: {
+    roomId: T_RoomId
+    effects: T_BaseCharacterEffect[]
   }
 }
