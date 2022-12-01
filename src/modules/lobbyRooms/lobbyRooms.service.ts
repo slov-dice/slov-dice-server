@@ -21,7 +21,11 @@ import {
   I_SubscriptionData,
 } from 'models/shared/socket/lobbyRooms'
 import { t } from 'languages'
-import { T_BaseCharacterBar } from 'models/shared/game/character'
+import {
+  T_BaseCharacterBar,
+  T_BaseCharacterEffect,
+  T_BaseCharacterSpecial,
+} from 'models/shared/game/character'
 
 @Injectable()
 export class LobbyRoomsService {
@@ -57,12 +61,12 @@ export class LobbyRoomsService {
       currentSize: 1,
       users: [{ userId: user.id, socketId: user.socketId }],
       messages: [],
-      game: lobbyRoomGameInstance,
+      game: lobbyRoomGameInstance(),
     }
 
     const updatedUser = this.lobbyUsers.setInRoomBySocketId(socketId)
     this.rooms.push(room)
-
+    console.log('rooms', this.rooms[0].game.characters.settings)
     return {
       fullRoom: room,
       previewRoom: this.fullToPreviewRoom(room),
@@ -163,6 +167,24 @@ export class LobbyRoomsService {
     const room = this.findRoomById(roomId)
     room.game.characters.settings.bars = bars
     return room.game.characters.settings.bars
+  }
+
+  updateCharactersWindowSettingsSpecials(
+    roomId: T_RoomId,
+    specials: T_BaseCharacterSpecial[],
+  ): T_BaseCharacterSpecial[] {
+    const room = this.findRoomById(roomId)
+    room.game.characters.settings.specials = specials
+    return room.game.characters.settings.specials
+  }
+
+  updateCharactersWindowSettingsEffects(
+    roomId: T_RoomId,
+    effects: T_BaseCharacterEffect[],
+  ): T_BaseCharacterEffect[] {
+    const room = this.findRoomById(roomId)
+    room.game.characters.settings.effects = effects
+    return room.game.characters.settings.effects
   }
 
   createMessage(

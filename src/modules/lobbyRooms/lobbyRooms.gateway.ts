@@ -189,4 +189,54 @@ export class LobbyRoomsGateway
       .to(roomId)
       .emit(E_Subscribe.getCharactersWindowSettingsBars, toPayload)
   }
+
+  @SubscribeMessage(E_Emit.updateCharactersWindowSettingsSpecials)
+  updateCharactersWindowSettingsSpecials(
+    client: Socket,
+    {
+      roomId,
+      specials,
+    }: I_EmitPayload[E_Emit.updateCharactersWindowSettingsSpecials],
+  ): void {
+    const roomSpecials = this.lobbyRooms.updateCharactersWindowSettingsSpecials(
+      roomId,
+      specials,
+    )
+
+    const toPayload: I_SubscriptionData[E_Subscribe.getCharactersWindowSettingsSpecials] =
+      {
+        specials: roomSpecials,
+        message: t('room.success.characters.settings.specials'),
+        status: E_StatusServerMessage.info,
+      }
+
+    this.server
+      .to(roomId)
+      .emit(E_Subscribe.getCharactersWindowSettingsSpecials, toPayload)
+  }
+
+  @SubscribeMessage(E_Emit.updateCharactersWindowSettingsEffects)
+  updateCharactersWindowSettingsEffects(
+    client: Socket,
+    {
+      roomId,
+      effects,
+    }: I_EmitPayload[E_Emit.updateCharactersWindowSettingsEffects],
+  ): void {
+    const roomEffects = this.lobbyRooms.updateCharactersWindowSettingsEffects(
+      roomId,
+      effects,
+    )
+
+    const toPayload: I_SubscriptionData[E_Subscribe.getCharactersWindowSettingsEffects] =
+      {
+        effects: roomEffects,
+        message: t('room.success.characters.settings.effects'),
+        status: E_StatusServerMessage.info,
+      }
+
+    this.server
+      .to(roomId)
+      .emit(E_Subscribe.getCharactersWindowSettingsEffects, toPayload)
+  }
 }

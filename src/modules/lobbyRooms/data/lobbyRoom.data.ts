@@ -4,7 +4,7 @@ import { I_FullRoomGame } from 'models/shared/app'
 import { E_EffectIcon } from 'models/shared/game/extra/effects'
 import { E_EffectType } from 'models/shared/game/character'
 
-export const lobbyRoomGameInstance: I_FullRoomGame = {
+export const lobbyRoomGameInstance = (): I_FullRoomGame => ({
   characters: {
     window: {
       characters: [],
@@ -66,4 +66,4 @@ export const lobbyRoomGameInstance: I_FullRoomGame = {
       ],
     },
   },
-}
+})
