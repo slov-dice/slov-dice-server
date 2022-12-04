@@ -31,7 +31,11 @@
       "characters": {
         "settings": {
           "bars": "The character bars have changed",
-          "specials": "Specials of the characters have changed"
+          "specials": "Specials of the characters have changed",
+          "effects": "The character effects have changed"
+        },
+        "character": {
+          "created": "New character created"
         }
       }
     },

@@ -110,14 +110,12 @@ export class LobbyRoomsGateway
     client.emit(E_Subscribe.getFullRoom, clientPayload)
 
     // Отправляем обновлённую полную комнату ВСЕМ в комнате
-    const toPayload: I_SubscriptionData[E_Subscribe.getFullRoom] = {
+    const response: I_SubscriptionData[E_Subscribe.getFullRoom] = {
       fullRoom: clientPayload.fullRoom,
       message: t('room.info.userJoin'),
       status: E_StatusServerMessage.info,
     }
-    client
-      .to(clientPayload.fullRoom.id)
-      .emit(E_Subscribe.getFullRoom, toPayload)
+    client.to(clientPayload.fullRoom.id).emit(E_Subscribe.getFullRoom, response)
 
     // Отправляем всем обновлённое превью комнаты
     const previewRoom = this.lobbyRooms.fullToPreviewRoom(
@@ -173,21 +171,20 @@ export class LobbyRoomsGateway
     client: Socket,
     { roomId, bars }: I_EmitPayload[E_Emit.updateCharactersWindowSettingsBars],
   ): void {
-    const roomBars = this.lobbyRooms.updateCharactersWindowSettingsBars(
-      roomId,
-      bars,
-    )
+    const { settingsBars, characters } =
+      this.lobbyRooms.updateCharactersWindowSettingsBars(roomId, bars)
 
-    const toPayload: I_SubscriptionData[E_Subscribe.getCharactersWindowSettingsBars] =
+    const response: I_SubscriptionData[E_Subscribe.getCharactersWindowSettingsBars] =
       {
-        bars: roomBars,
+        bars: settingsBars,
+        characters,
         message: t('room.success.characters.settings.bars'),
         status: E_StatusServerMessage.info,
       }
 
     this.server
       .to(roomId)
-      .emit(E_Subscribe.getCharactersWindowSettingsBars, toPayload)
+      .emit(E_Subscribe.getCharactersWindowSettingsBars, response)
   }
 
   @SubscribeMessage(E_Emit.updateCharactersWindowSettingsSpecials)
@@ -198,21 +195,20 @@ export class LobbyRoomsGateway
       specials,
     }: I_EmitPayload[E_Emit.updateCharactersWindowSettingsSpecials],
   ): void {
-    const roomSpecials = this.lobbyRooms.updateCharactersWindowSettingsSpecials(
-      roomId,
-      specials,
-    )
+    const { settingsSpecials, characters } =
+      this.lobbyRooms.updateCharactersWindowSettingsSpecials(roomId, specials)
 
-    const toPayload: I_SubscriptionData[E_Subscribe.getCharactersWindowSettingsSpecials] =
+    const response: I_SubscriptionData[E_Subscribe.getCharactersWindowSettingsSpecials] =
       {
-        specials: roomSpecials,
+        specials: settingsSpecials,
+        characters,
         message: t('room.success.characters.settings.specials'),
         status: E_StatusServerMessage.info,
       }
 
     this.server
       .to(roomId)
-      .emit(E_Subscribe.getCharactersWindowSettingsSpecials, toPayload)
+      .emit(E_Subscribe.getCharactersWindowSettingsSpecials, response)
   }
 
   @SubscribeMessage(E_Emit.updateCharactersWindowSettingsEffects)
@@ -223,20 +219,91 @@ export class LobbyRoomsGateway
       effects,
     }: I_EmitPayload[E_Emit.updateCharactersWindowSettingsEffects],
   ): void {
-    const roomEffects = this.lobbyRooms.updateCharactersWindowSettingsEffects(
-      roomId,
-      effects,
-    )
+    const { characters, settingsEffects } =
+      this.lobbyRooms.updateCharactersWindowSettingsEffects(roomId, effects)
 
-    const toPayload: I_SubscriptionData[E_Subscribe.getCharactersWindowSettingsEffects] =
+    const response: I_SubscriptionData[E_Subscribe.getCharactersWindowSettingsEffects] =
       {
-        effects: roomEffects,
+        effects: settingsEffects,
+        characters,
         message: t('room.success.characters.settings.effects'),
         status: E_StatusServerMessage.info,
       }
 
     this.server
       .to(roomId)
-      .emit(E_Subscribe.getCharactersWindowSettingsEffects, toPayload)
+      .emit(E_Subscribe.getCharactersWindowSettingsEffects, response)
+  }
+
+  @SubscribeMessage(E_Emit.createCharacterInCharactersWindow)
+  createCharacterInCharactersWindow(
+    client: Socket,
+    {
+      roomId,
+      character,
+    }: I_EmitPayload[E_Emit.createCharacterInCharactersWindow],
+  ): void {
+    const roomCharacter = this.lobbyRooms.createCharacterInCharactersWindow(
+      roomId,
+      character,
+    )
+
+    const response: I_SubscriptionData[E_Subscribe.getCreatedCharacterInCharactersWindow] =
+      {
+        character: roomCharacter,
+        message: t('room.success.characters.character.created'),
+        status: E_StatusServerMessage.info,
+      }
+
+    this.server
+      .to(roomId)
+      .emit(E_Subscribe.getCreatedCharacterInCharactersWindow, response)
+  }
+
+  @SubscribeMessage(E_Emit.updateCharacterInCharactersWindow)
+  updateCharacterInCharactersWindow(
+    client: Socket,
+    {
+      roomId,
+      character,
+    }: I_EmitPayload[E_Emit.updateCharacterInCharactersWindow],
+  ): void {
+    const roomCharacter = this.lobbyRooms.createCharacterInCharactersWindow(
+      roomId,
+      character,
+    )
+
+    const response: I_SubscriptionData[E_Subscribe.getUpdatedCharacterInCharactersWindow] =
+      {
+        character: roomCharacter,
+      }
+
+    this.server
+      .to(roomId)
+      .emit(E_Subscribe.getUpdatedCharacterInCharactersWindow, response)
+  }
+
+  @SubscribeMessage(E_Emit.updateCharacterFieldInCharactersWindow)
+  updateCharacterFieldInCharactersWindow(
+    client: Socket,
+    data: I_EmitPayload[E_Emit.updateCharacterFieldInCharactersWindow],
+  ): void {
+    const roomCharacter =
+      this.lobbyRooms.updateCharacterFieldInCharactersWindow(
+        data.roomId,
+        data.characterId,
+        data.field,
+        data.value,
+        data.subFieldId,
+      )
+
+    const response: I_SubscriptionData[E_Subscribe.getUpdatedCharacterInCharactersWindow] =
+      {
+        character: roomCharacter,
+      }
+
+    this.server
+      .to(data.roomId)
+      .emit(E_Subscribe.getUpdatedCharacterInCharactersWindow, response)
   }
 }

@@ -22,9 +22,12 @@ import {
 } from 'models/shared/socket/lobbyRooms'
 import { t } from 'languages'
 import {
+  I_Character,
   T_BaseCharacterBar,
   T_BaseCharacterEffect,
   T_BaseCharacterSpecial,
+  T_CharacterBar,
+  T_CharacterSpecial,
 } from 'models/shared/game/character'
 
 @Injectable()
@@ -163,28 +166,123 @@ export class LobbyRoomsService {
   updateCharactersWindowSettingsBars(
     roomId: T_RoomId,
     bars: T_BaseCharacterBar[],
-  ): T_BaseCharacterBar[] {
+  ): { settingsBars: T_BaseCharacterBar[]; characters: I_Character[] } {
     const room = this.findRoomById(roomId)
     room.game.characters.settings.bars = bars
-    return room.game.characters.settings.bars
+
+    room.game.characters.window.characters =
+      room.game.characters.window.characters.reduce((acc, character) => {
+        character.bars = bars.map((bar) => ({
+          id: bar.id,
+          current: 50,
+          max: 100,
+        }))
+        acc.push(character)
+        return acc
+      }, [])
+
+    return {
+      settingsBars: room.game.characters.settings.bars,
+      characters: room.game.characters.window.characters,
+    }
   }
 
   updateCharactersWindowSettingsSpecials(
     roomId: T_RoomId,
     specials: T_BaseCharacterSpecial[],
-  ): T_BaseCharacterSpecial[] {
+  ): { settingsSpecials: T_BaseCharacterSpecial[]; characters: I_Character[] } {
     const room = this.findRoomById(roomId)
     room.game.characters.settings.specials = specials
-    return room.game.characters.settings.specials
+
+    room.game.characters.window.characters =
+      room.game.characters.window.characters.reduce((acc, character) => {
+        character.specials = specials.map((special) => ({
+          id: special.id,
+          current: 5,
+        }))
+        acc.push(character)
+        return acc
+      }, [])
+
+    return {
+      settingsSpecials: room.game.characters.settings.specials,
+      characters: room.game.characters.window.characters,
+    }
   }
 
   updateCharactersWindowSettingsEffects(
     roomId: T_RoomId,
     effects: T_BaseCharacterEffect[],
-  ): T_BaseCharacterEffect[] {
+  ): { settingsEffects: T_BaseCharacterEffect[]; characters: I_Character[] } {
     const room = this.findRoomById(roomId)
     room.game.characters.settings.effects = effects
-    return room.game.characters.settings.effects
+
+    room.game.characters.window.characters =
+      room.game.characters.window.characters.reduce((acc, character) => {
+        character.effects = []
+        acc.push(character)
+        return acc
+      }, [])
+
+    return {
+      settingsEffects: room.game.characters.settings.effects,
+      characters: room.game.characters.window.characters,
+    }
+  }
+
+  createCharacterInCharactersWindow(
+    roomId: T_RoomId,
+    character: I_Character,
+  ): I_Character {
+    const room = this.findRoomById(roomId)
+    room.game.characters.window.characters.push(character)
+    return character
+  }
+
+  updateCharacterInCharactersWindow(
+    roomId: T_RoomId,
+    character: I_Character,
+  ): I_Character {
+    const room = this.findRoomById(roomId)
+    room.game.characters.window.characters =
+      room.game.characters.window.characters.map((roomCharacter) =>
+        roomCharacter.id === character.id ? character : roomCharacter,
+      )
+    return character
+  }
+
+  updateCharacterFieldInCharactersWindow(
+    roomId: T_RoomId,
+    characterId: string,
+    field: string,
+    value: string | number,
+    subFieldId?: string,
+  ): I_Character {
+    const room = this.findRoomById(roomId)
+    const character = room.game.characters.window.characters.find(
+      (character) => character.id === characterId,
+    )
+
+    if (field === 'effects') {
+      if (character.effects.includes(value as string)) {
+        character.effects = character.effects.filter(
+          (effectId) => effectId !== value,
+        )
+      } else {
+        character.effects.push(value as string)
+      }
+
+      return character
+    }
+
+    if (subFieldId) {
+      character[field] = character[field].map(
+        (item: T_CharacterBar | T_CharacterSpecial) =>
+          item.id === subFieldId ? { ...item, current: value } : item,
+      )
+    }
+    if (!subFieldId) character[field] = value
+    return character
   }
 
   createMessage(
