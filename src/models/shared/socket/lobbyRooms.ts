@@ -9,6 +9,7 @@ import {
   T_UserId,
 } from 'models/shared/app'
 import {
+  I_Character,
   T_BaseCharacterBar,
   T_BaseCharacterEffect,
   T_BaseCharacterSpecial,
@@ -25,6 +26,9 @@ export enum E_Subscribe {
   getCharactersWindowSettingsBars = 'getCharactersWindowSettingsBars',
   getCharactersWindowSettingsSpecials = 'getCharactersWindowSettingsSpecials',
   getCharactersWindowSettingsEffects = 'getCharactersWindowSettingsEffects',
+
+  getCreatedCharacterInCharactersWindow = 'getCreatedCharacterInCharactersWindow',
+  getUpdatedCharacterInCharactersWindow = 'getUpdatedCharacterInCharactersWindow',
 }
 
 export interface I_SubscriptionData {
@@ -45,16 +49,27 @@ export interface I_SubscriptionData {
     message: T_LocaleText
     status: E_StatusServerMessage
     bars: T_BaseCharacterBar[]
+    characters: I_Character[]
   }
   [E_Subscribe.getCharactersWindowSettingsSpecials]: {
     message: T_LocaleText
     status: E_StatusServerMessage
     specials: T_BaseCharacterSpecial[]
+    characters: I_Character[]
   }
   [E_Subscribe.getCharactersWindowSettingsEffects]: {
     message: T_LocaleText
     status: E_StatusServerMessage
     effects: T_BaseCharacterEffect[]
+    characters: I_Character[]
+  }
+  [E_Subscribe.getCreatedCharacterInCharactersWindow]: {
+    message: T_LocaleText
+    status: E_StatusServerMessage
+    character: I_Character
+  }
+  [E_Subscribe.getUpdatedCharacterInCharactersWindow]: {
+    character: I_Character
   }
 }
 
@@ -70,6 +85,10 @@ export enum E_Emit {
   updateCharactersWindowSettingsBars = 'updateCharactersWindowSettingsBars',
   updateCharactersWindowSettingsSpecials = 'updateCharactersWindowSettingsSpecials',
   updateCharactersWindowSettingsEffects = 'updateCharactersWindowSettingsEffects',
+
+  createCharacterInCharactersWindow = 'createCharacterInCharactersWindow',
+  updateCharacterInCharactersWindow = 'updateCharacterInCharactersWindow',
+  updateCharacterFieldInCharactersWindow = 'updateCharacterFieldInCharactersWindow',
 }
 
 export interface I_EmitPayload {
@@ -107,5 +126,20 @@ export interface I_EmitPayload {
   [E_Emit.updateCharactersWindowSettingsEffects]: {
     roomId: T_RoomId
     effects: T_BaseCharacterEffect[]
+  }
+  [E_Emit.createCharacterInCharactersWindow]: {
+    roomId: T_RoomId
+    character: I_Character
+  }
+  [E_Emit.updateCharacterInCharactersWindow]: {
+    roomId: T_RoomId
+    character: I_Character
+  }
+  [E_Emit.updateCharacterFieldInCharactersWindow]: {
+    roomId: T_RoomId
+    characterId: string
+    field: string
+    subFieldId?: string
+    value: string | number
   }
 }
