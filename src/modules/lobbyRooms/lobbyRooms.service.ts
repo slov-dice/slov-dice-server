@@ -69,7 +69,6 @@ export class LobbyRoomsService {
 
     const updatedUser = this.lobbyUsers.setInRoomBySocketId(socketId)
     this.rooms.push(room)
-    console.log('rooms', this.rooms[0].game.characters.settings)
     return {
       fullRoom: room,
       previewRoom: this.fullToPreviewRoom(room),
@@ -172,11 +171,18 @@ export class LobbyRoomsService {
 
     room.game.characters.window.characters =
       room.game.characters.window.characters.reduce((acc, character) => {
-        character.bars = bars.map((bar) => ({
-          id: bar.id,
-          current: 50,
-          max: 100,
-        }))
+        character.bars = bars.reduce((acc, settingsBar) => {
+          const characterBar = character.bars.find(
+            (characterBar) => settingsBar.id === characterBar.id,
+          )
+          if (characterBar) {
+            acc.push(characterBar)
+          }
+          if (!characterBar) {
+            acc.push({ id: settingsBar.id, current: 100, max: 100 })
+          }
+          return acc
+        }, [] as T_CharacterBar[])
         acc.push(character)
         return acc
       }, [])
@@ -196,10 +202,20 @@ export class LobbyRoomsService {
 
     room.game.characters.window.characters =
       room.game.characters.window.characters.reduce((acc, character) => {
-        character.specials = specials.map((special) => ({
-          id: special.id,
-          current: 5,
-        }))
+        character.specials = specials.reduce((acc, settingsSpecial) => {
+          const characterSpecial = character.specials.find(
+            (characterSpecial) => characterSpecial.id === settingsSpecial.id,
+          )
+
+          if (characterSpecial) {
+            acc.push(characterSpecial)
+          }
+          if (!characterSpecial) {
+            acc.push({ id: settingsSpecial.id, current: 5 })
+          }
+
+          return acc
+        }, [] as T_CharacterSpecial[])
         acc.push(character)
         return acc
       }, [])
@@ -219,7 +235,17 @@ export class LobbyRoomsService {
 
     room.game.characters.window.characters =
       room.game.characters.window.characters.reduce((acc, character) => {
-        character.effects = []
+        character.effects = effects.reduce((acc, settingsEffect) => {
+          const characterEffect = character.effects.find(
+            (characterEffect) => characterEffect === settingsEffect.id,
+          )
+
+          if (characterEffect) {
+            acc.push(characterEffect)
+          }
+
+          return acc
+        }, [] as string[])
         acc.push(character)
         return acc
       }, [])
@@ -248,6 +274,7 @@ export class LobbyRoomsService {
       room.game.characters.window.characters.map((roomCharacter) =>
         roomCharacter.id === character.id ? character : roomCharacter,
       )
+
     return character
   }
 
@@ -262,6 +289,8 @@ export class LobbyRoomsService {
     const character = room.game.characters.window.characters.find(
       (character) => character.id === characterId,
     )
+
+    console.log('0', character)
 
     if (field === 'effects') {
       if (character.effects.includes(value as string)) {
@@ -281,7 +310,9 @@ export class LobbyRoomsService {
           item.id === subFieldId ? { ...item, current: value } : item,
       )
     }
+
     if (!subFieldId) character[field] = value
+    console.log('first', character)
     return character
   }
 

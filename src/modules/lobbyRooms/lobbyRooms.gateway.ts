@@ -268,7 +268,7 @@ export class LobbyRoomsGateway
       character,
     }: I_EmitPayload[E_Emit.updateCharacterInCharactersWindow],
   ): void {
-    const roomCharacter = this.lobbyRooms.createCharacterInCharactersWindow(
+    const roomCharacter = this.lobbyRooms.updateCharacterInCharactersWindow(
       roomId,
       character,
     )
