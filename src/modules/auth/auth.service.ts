@@ -1,33 +1,21 @@
-import {
-  ForbiddenException,
-  UnauthorizedException,
-  NotFoundException,
-} from '@nestjs/common'
+import { ForbiddenException, NotFoundException } from '@nestjs/common'
 import { Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { HttpService } from '@nestjs/axios'
 import { ConfigService } from '@nestjs/config'
 import { lastValueFrom } from 'rxjs'
-import { Response } from 'express'
 import * as argon2 from 'argon2'
 import { AxiosResponse } from 'axios'
 
-import {
-  SignUpDto,
-  SignInDto,
-  ThirdPartyDto,
-  EmailConfirmDto,
-  LogoutDto,
-} from './dtos'
+import { SignUpDto, SignInDto, ThirdPartyDto, EmailConfirmDto } from './dtos'
 import { T_AuthResponse, T_ThirdPartyUserData } from './models/response.model'
 import { T_TokenParams } from './models/params.model'
-import { TokenData } from './models/tokens.model'
 import { TokenService } from './token.service'
 
 import { UsersService } from 'modules/users/users.service'
 import { MailService } from 'modules/mail/mail.service'
 import { LobbyUsersService } from 'modules/lobbyUsers/lobbyUsers.service'
-import { E_AuthType, T_AccessToken, T_RefreshToken } from 'models/shared/app'
+import { E_AuthType, T_TokenData, T_UserId } from 'models/shared/app'
 import { t } from 'languages'
 
 @Injectable()
@@ -43,10 +31,7 @@ export class AuthService {
   ) {}
 
   // Регистрация
-  async signUpLocal(
-    dto: SignUpDto,
-    response: Response,
-  ): Promise<T_AuthResponse> {
+  async signUpLocal(dto: SignUpDto): Promise<T_AuthResponse> {
     const userExists = await this.usersService.findOneByEmailAndNickname(
       dto.email,
       dto.nickname,
@@ -65,7 +50,6 @@ export class AuthService {
     )
 
     const tokens = await this.tokenService.generateTokens(user.id, user.email)
-    this.setCookies(tokens.access_token, tokens.refresh_token, response)
 
     // Добавление сокета
     this.lobbyUsers.create(user)
@@ -78,7 +62,8 @@ export class AuthService {
     await this.mailService.sendUserConfirmation(user, verifyToken)
 
     return {
-      accessToken: tokens.access_token,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
       message: t('auth.success.registered'),
       id: user.id,
       nickname: user.nickname,
@@ -87,10 +72,7 @@ export class AuthService {
   }
 
   // Аутентификация
-  async signInLocal(
-    dto: SignInDto,
-    response: Response,
-  ): Promise<T_AuthResponse> {
+  async signInLocal(dto: SignInDto): Promise<T_AuthResponse> {
     const user = await this.usersService.findUnique('email', dto.email)
 
     // Если пользователь не найден
@@ -107,10 +89,10 @@ export class AuthService {
       throw new ForbiddenException(t('auth.error.wrongPassword'))
 
     const tokens = await this.tokenService.generateTokens(user.id, user.email)
-    this.setCookies(tokens.access_token, tokens.refresh_token, response)
 
     return {
-      accessToken: tokens.access_token,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
       message: t('auth.success.login'),
       id: user.id,
       nickname: user.nickname,
@@ -161,7 +143,6 @@ export class AuthService {
   async authByThirdParty(
     authType: E_AuthType,
     data: T_ThirdPartyUserData,
-    response: Response,
   ): Promise<T_AuthResponse> {
     const user = await this.usersService.findUnique('email', data.email)
 
@@ -171,9 +152,9 @@ export class AuthService {
         throw new ForbiddenException(t('auth.error.mailRegistered'))
 
       const tokens = await this.tokenService.generateTokens(user.id, user.email)
-      this.setCookies(tokens.access_token, tokens.refresh_token, response)
       return {
-        accessToken: tokens.access_token,
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
         message: t('auth.success.login'),
         id: user.id,
         nickname: user.nickname,
@@ -192,11 +173,11 @@ export class AuthService {
       )
 
       const tokens = await this.tokenService.generateTokens(user.id, user.email)
-      this.setCookies(tokens.access_token, tokens.refresh_token, response)
       this.lobbyUsers.create(user)
 
       return {
-        accessToken: tokens.access_token,
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
         message: t('auth.success.registered'),
         id: user.id,
         nickname: user.nickname,
@@ -205,7 +186,7 @@ export class AuthService {
     }
   }
 
-  async guestAuth(response: Response) {
+  async guestAuth() {
     const postfix = ~~(Math.random() * (9999 - 1000) + 1000)
     const nickname = `Player-${postfix}`
 
@@ -217,11 +198,11 @@ export class AuthService {
     )
 
     const tokens = await this.tokenService.generateTokens(user.id, user.email)
-    this.setCookies(tokens.access_token, tokens.refresh_token, response)
     this.lobbyUsers.create(user)
 
     return {
-      accessToken: tokens.access_token,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
       message: t('auth.success.registered'),
       id: user.id,
       nickname: user.nickname,
@@ -229,56 +210,18 @@ export class AuthService {
     }
   }
 
-  async check(ac: T_AccessToken, rt: T_RefreshToken) {
-    const tokenData: TokenData = this.jwtService.verify(rt, {
-      secret: this.config.get('JWT_SECRET_RT'),
-    })
-
-    const user = await this.usersService.findUnique('id', tokenData.sub)
+  async check(userId: T_UserId) {
+    const user = await this.usersService.findUnique('id', userId)
 
     return {
-      accessToken: ac,
       id: user.id,
       nickname: user.nickname,
       email: user.email,
     }
   }
 
-  logout(userId: number, response: Response, dto: LogoutDto) {
-    if (dto.from === E_AuthType.guest) {
-      this.usersService.removeById(userId)
-    }
-    response.clearCookie('access_token')
-    response.clearCookie('refresh_token')
-  }
-
-  async refreshTokens(rt: T_RefreshToken, response: Response) {
-    try {
-      // RT не найден в куки
-      if (!rt) {
-        throw new UnauthorizedException(t('auth.error.unauthorized'))
-      }
-
-      const tokenData: TokenData = this.jwtService.verify(rt, {
-        secret: this.config.get('JWT_SECRET_RT'),
-      })
-
-      if (!tokenData) {
-        throw new UnauthorizedException(t('auth.error.unauthorized'))
-      }
-
-      const user = await this.usersService.findUnique('id', tokenData.sub)
-      const tokens = await this.tokenService.generateTokens(user.id, user.email)
-
-      this.setCookies(tokens.access_token, tokens.refresh_token, response)
-      return tokens
-    } catch {
-      throw new NotFoundException(t('auth.error.refreshTokenExpired'))
-    }
-  }
-
   async emailConfirmation(dto: EmailConfirmDto) {
-    let tokenData: TokenData
+    let tokenData: T_TokenData
     try {
       tokenData = this.jwtService.verify(dto.token, {
         secret: this.config.get('JWT_SECRET_MAIL'),
@@ -291,21 +234,6 @@ export class AuthService {
 
     if (!user) throw new NotFoundException(t('auth.error.userNotFound'))
     return { message: t('auth.success.verified') }
-  }
-
-  setCookies(at: string, rt: string, response: Response) {
-    response.cookie('access_token', at, {
-      httpOnly: false,
-      maxAge: 60_000 * 15, // 15 минут
-      sameSite: 'none',
-      secure: true,
-    })
-    response.cookie('refresh_token', rt, {
-      httpOnly: true,
-      maxAge: 7 * 24 * 60 * 60 * 1000, // неделя
-      sameSite: 'none',
-      secure: true,
-    })
   }
 
   getTokenUrlThirdParty(authType: E_AuthType): string {

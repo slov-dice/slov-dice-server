@@ -12,53 +12,42 @@ import {
 import { Response } from 'express'
 
 import { AuthService } from './auth.service'
-import {
-  SignUpDto,
-  SignInDto,
-  ThirdPartyDto,
-  EmailConfirmDto,
-  LogoutDto,
-} from './dtos'
+import { SignUpDto, SignInDto, ThirdPartyDto, EmailConfirmDto } from './dtos'
 import { T_AuthResponse, T_ThirdPartyUserData } from './models/response.model'
+import { TokenService } from './token.service'
 
-import { GetCurrentUserId, GetReqRT } from 'decorators'
+import { GetCurrentTokenData, GetUserId } from 'decorators'
 import { AtGuard } from 'guards'
-import { GetReqAT } from 'decorators/getReqAT.decorator'
-import { T_AccessToken, T_RefreshToken } from 'models/shared/app'
+import { T_TokenData, T_UserId } from 'models/shared/app'
+import JwtRefreshGuard from 'guards/jwtRefresh.guard'
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private tokenService: TokenService,
+  ) {}
 
   // Регистрация через почту
   @Post('local/signup')
   @HttpCode(HttpStatus.CREATED)
-  signUpLocal(
-    @Body() dto: SignUpDto,
-    @Res({ passthrough: true }) response: Response,
-  ): Promise<T_AuthResponse> {
-    return this.authService.signUpLocal(dto, response)
+  signUpLocal(@Body() dto: SignUpDto): Promise<T_AuthResponse> {
+    return this.authService.signUpLocal(dto)
   }
 
   // Аутентификация через почту
   @Post('local/signin')
   @HttpCode(HttpStatus.OK)
-  signInLocal(
-    @Body() dto: SignInDto,
-    @Res({ passthrough: true }) response: Response,
-  ): Promise<T_AuthResponse> {
-    return this.authService.signInLocal(dto, response)
+  signInLocal(@Body() dto: SignInDto): Promise<T_AuthResponse> {
+    return this.authService.signInLocal(dto)
   }
 
   // Первоначальная проверка авторизации
   @UseGuards(AtGuard)
   @Post('check')
   @HttpCode(HttpStatus.OK)
-  checkAuth(
-    @GetReqAT() at: T_AccessToken,
-    @GetReqRT() rt: T_RefreshToken,
-  ): Promise<T_AuthResponse> {
-    return this.authService.check(at, rt)
+  checkAuth(@GetUserId() userId: T_UserId): Promise<T_AuthResponse> {
+    return this.authService.check(userId)
   }
 
   // Интервальная проверка токенов
@@ -72,10 +61,7 @@ export class AuthController {
   // Сторонняя авторизация
   @Post('token')
   @HttpCode(HttpStatus.OK)
-  async tokenAuth(
-    @Body() dto: ThirdPartyDto,
-    @Res({ passthrough: true }) response: Response,
-  ): Promise<T_AuthResponse> {
+  async tokenAuth(@Body() dto: ThirdPartyDto): Promise<T_AuthResponse> {
     try {
       // Получаем токен пользователя с помощью кода
       const responseToken = await this.authService.getTokenFromThirdParty(dto)
@@ -89,7 +75,7 @@ export class AuthController {
       const userData: T_ThirdPartyUserData = responseUser.data
 
       // Регистрируем или аутентифицируем юзера
-      return this.authService.authByThirdParty(dto.authType, userData, response)
+      return this.authService.authByThirdParty(dto.authType, userData)
     } catch (error) {
       throw new ForbiddenException('Unauthorized!')
     }
@@ -98,32 +84,16 @@ export class AuthController {
   // Авторизация гостем
   @Get('guest')
   @HttpCode(HttpStatus.OK)
-  guestAuth(
-    @Res({ passthrough: true }) response: Response,
-  ): Promise<T_AuthResponse> {
-    return this.authService.guestAuth(response)
-  }
-
-  // Выход из системы, удаляем все токены пользователя
-  @UseGuards(AtGuard)
-  @Post('logout')
-  @HttpCode(HttpStatus.OK)
-  logout(
-    @Body() dto: LogoutDto,
-    @GetCurrentUserId() userId: number,
-    @Res({ passthrough: true }) response: Response,
-  ) {
-    return this.authService.logout(userId, response, dto)
+  guestAuth(): Promise<T_AuthResponse> {
+    return this.authService.guestAuth()
   }
 
   // Обновление токенов
+  @UseGuards(JwtRefreshGuard)
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  refreshTokens(
-    @GetReqRT() rt: string,
-    @Res({ passthrough: true }) response: Response,
-  ) {
-    return this.authService.refreshTokens(rt, response)
+  refreshTokens(@GetCurrentTokenData() token: T_TokenData) {
+    return this.tokenService.generateTokens(Number(token.sub), token.email)
   }
 
   // Верификация почты

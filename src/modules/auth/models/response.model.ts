@@ -1,12 +1,13 @@
 import { T_LocaleText } from 'models/shared/app'
 
 export type T_Tokens = {
-  access_token: string
-  refresh_token: string
+  accessToken: string
+  refreshToken: string
 }
 
 export type T_AuthResponse = {
-  accessToken: string
+  accessToken?: string
+  refreshToken?: string
   message?: T_LocaleText
   id: number
   nickname: string
