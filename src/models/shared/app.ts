@@ -7,8 +7,13 @@ export type T_AccessToken = string
 export type T_RefreshToken = string
 
 export type T_Tokens = {
-  access_token: string
-  refresh_token: string
+  accessToken: string
+  refreshToken: string
+}
+
+export type T_TokenData = {
+  sub: string
+  email: string
 }
 
 export enum E_UserStatus {
