@@ -27,6 +27,11 @@ export enum E_RoomType {
   private = 'PRIVATE',
 }
 
+export enum E_ChatType {
+  lobby = 'LOBBY',
+  room = 'ROOM',
+}
+
 export enum E_RoomMessageType {
   custom = 'custom',
   command = 'command',
@@ -92,6 +97,7 @@ export interface I_RoomMessage {
   author: string
   text: string
   type: E_RoomMessageType
+  command?: string
 }
 
 export interface I_PreviewRoom {

@@ -20,6 +20,7 @@ export enum E_Subscribe {
   getPreviewRoom = 'getPreviewRoom',
   getFullRoom = 'getFullRoom',
   getFullRoomRejoin = 'getFullRoomRejoin',
+  getRoomChat = 'getRoomChat',
   getRoomMessage = 'getRoomMessage',
 
   // Characters Window
@@ -42,6 +43,7 @@ export interface I_SubscriptionData {
   [E_Subscribe.getFullRoomRejoin]: {
     fullRoom: I_FullRoom
   }
+  [E_Subscribe.getRoomChat]: { messages: I_RoomMessage[] }
   [E_Subscribe.getRoomMessage]: { message: I_RoomMessage }
 
   // Characters Window
@@ -79,6 +81,7 @@ export enum E_Emit {
   joinRoom = 'joinRoom',
   rejoinRoom = 'rejoinRoom',
   leaveRoom = 'leaveRoom',
+  requestRoomMessages = 'requestRoomMessages',
   sendMessageRoom = 'sendMessageRoom',
 
   // Characters Window
@@ -107,6 +110,9 @@ export interface I_EmitPayload {
     userId: T_UserId
   }
   [E_Emit.leaveRoom]: {
+    roomId: T_RoomId
+  }
+  [E_Emit.requestRoomMessages]: {
     roomId: T_RoomId
   }
   [E_Emit.sendMessageRoom]: {
