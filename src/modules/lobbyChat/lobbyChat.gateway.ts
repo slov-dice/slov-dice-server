@@ -70,7 +70,6 @@ export class LobbyChatGateway
     client: Socket,
     data: I_EmitPayload[E_Emit.sendLobbyMessage],
   ) {
-    const users = this.lobbyUsers.getAll()
     const user = this.lobbyUsers.findBySocketId(client.id)
     const message = this.lobbyChat.create(user, data.text)
     const messageLobbyPayload: I_SubscriptionData[E_Subscribe.getLobbyMessage] =

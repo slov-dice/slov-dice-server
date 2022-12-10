@@ -316,6 +316,10 @@ export class LobbyRoomsService {
     return character
   }
 
+  getRoomMessages(roomId: T_RoomId): I_RoomMessage[] {
+    return this.rooms.find((room) => room.id === roomId).messages
+  }
+
   createMessage(
     socketId: T_SocketId,
     roomId: T_RoomId,
@@ -335,6 +339,7 @@ export class LobbyRoomsService {
       authorId: user.id,
       author: user.nickname,
       text: modifiedText,
+      command: text.trim(),
       type: isCommand ? E_RoomMessageType.command : E_RoomMessageType.custom,
     }
 
@@ -348,6 +353,6 @@ export class LobbyRoomsService {
     const edges: number = +text.split('d')[1] || 6
     const getRandomValue = () => Math.floor(Math.random() * edges) + 1
     const values = [...new Array(dices)].map(getRandomValue)
-    return `[${values.join(' ')}]`
+    return values.join(' ')
   }
 }

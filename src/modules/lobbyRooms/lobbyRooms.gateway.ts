@@ -166,6 +166,18 @@ export class LobbyRoomsGateway
     this.server.to(roomId).emit(E_Subscribe.getRoomMessage, { message })
   }
 
+  @SubscribeMessage(E_Emit.requestRoomMessages)
+  requestRoomMessages(
+    client: Socket,
+    { roomId }: I_EmitPayload[E_Emit.requestRoomMessages],
+  ): void {
+    const response: I_SubscriptionData[E_Subscribe.getRoomChat] = {
+      messages: this.lobbyRooms.getRoomMessages(roomId),
+    }
+
+    this.server.to(roomId).emit(E_Subscribe.getRoomChat, response)
+  }
+
   @SubscribeMessage(E_Emit.updateCharactersWindowSettingsBars)
   updateCharactersWindowSettingsBars(
     client: Socket,
@@ -230,7 +242,7 @@ export class LobbyRoomsGateway
         status: E_StatusServerMessage.info,
       }
 
-    this.server
+    client
       .to(roomId)
       .emit(E_Subscribe.getCharactersWindowSettingsEffects, response)
   }
