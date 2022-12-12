@@ -290,8 +290,6 @@ export class LobbyRoomsService {
       (character) => character.id === characterId,
     )
 
-    console.log('0', character)
-
     if (field === 'effects') {
       if (character.effects.includes(value as string)) {
         character.effects = character.effects.filter(
@@ -312,7 +310,6 @@ export class LobbyRoomsService {
     }
 
     if (!subFieldId) character[field] = value
-    console.log('first', character)
     return character
   }
 
