@@ -27,6 +27,7 @@ import {
   T_BaseCharacterEffect,
   T_BaseCharacterSpecial,
   T_CharacterBar,
+  T_CharacterId,
   T_CharacterSpecial,
 } from 'models/shared/game/character'
 
@@ -311,6 +312,18 @@ export class LobbyRoomsService {
 
     if (!subFieldId) character[field] = value
     return character
+  }
+
+  removeCharacterInCharactersWindow(
+    roomId: T_RoomId,
+    characterId: T_CharacterId,
+  ) {
+    const room = this.findRoomById(roomId)
+    room.game.characters.window.characters =
+      room.game.characters.window.characters.filter(
+        (character) => character.id !== characterId,
+      )
+    return characterId
   }
 
   getRoomMessages(roomId: T_RoomId): I_RoomMessage[] {

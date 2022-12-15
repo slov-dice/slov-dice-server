@@ -318,4 +318,24 @@ export class LobbyRoomsGateway
       .to(data.roomId)
       .emit(E_Subscribe.getUpdatedCharacterInCharactersWindow, response)
   }
+
+  @SubscribeMessage(E_Emit.removeCharacterInCharactersWindow)
+  removeCharacterInCharactersWindow(
+    client: Socket,
+    data: I_EmitPayload[E_Emit.removeCharacterInCharactersWindow],
+  ) {
+    const roomCharacterId = this.lobbyRooms.removeCharacterInCharactersWindow(
+      data.roomId,
+      data.characterId,
+    )
+
+    const response: I_SubscriptionData[E_Subscribe.getRemovedCharacterInCharactersWindow] =
+      {
+        characterId: roomCharacterId,
+      }
+
+    this.server
+      .to(data.roomId)
+      .emit(E_Subscribe.getRemovedCharacterInCharactersWindow, response)
+  }
 }

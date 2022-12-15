@@ -13,6 +13,7 @@ import {
   T_BaseCharacterBar,
   T_BaseCharacterEffect,
   T_BaseCharacterSpecial,
+  T_CharacterId,
 } from 'models/shared/game/character'
 
 export enum E_Subscribe {
@@ -30,6 +31,7 @@ export enum E_Subscribe {
 
   getCreatedCharacterInCharactersWindow = 'getCreatedCharacterInCharactersWindow',
   getUpdatedCharacterInCharactersWindow = 'getUpdatedCharacterInCharactersWindow',
+  getRemovedCharacterInCharactersWindow = 'getRemovedCharacterInCharactersWindow',
 }
 
 export interface I_SubscriptionData {
@@ -73,6 +75,9 @@ export interface I_SubscriptionData {
   [E_Subscribe.getUpdatedCharacterInCharactersWindow]: {
     character: I_Character
   }
+  [E_Subscribe.getRemovedCharacterInCharactersWindow]: {
+    characterId: T_CharacterId
+  }
 }
 
 export enum E_Emit {
@@ -92,6 +97,7 @@ export enum E_Emit {
   createCharacterInCharactersWindow = 'createCharacterInCharactersWindow',
   updateCharacterInCharactersWindow = 'updateCharacterInCharactersWindow',
   updateCharacterFieldInCharactersWindow = 'updateCharacterFieldInCharactersWindow',
+  removeCharacterInCharactersWindow = 'removeCharacterInCharactersWindow',
 }
 
 export interface I_EmitPayload {
@@ -147,5 +153,9 @@ export interface I_EmitPayload {
     field: string
     subFieldId?: string
     value: string | number
+  }
+  [E_Emit.removeCharacterInCharactersWindow]: {
+    roomId: T_RoomId
+    characterId: string
   }
 }
