@@ -1,11 +1,10 @@
 import { E_EffectIcon } from '../extra/effects'
 
-import { T_LocaleText } from 'models/shared/app'
-
 export type T_CharacterId = string
 export type T_CharacterEffectId = string
 export type T_CharacterBarId = string
 export type T_CharacterSpecialId = string
+export type T_CharacterActionId = string
 
 export interface I_CharactersSettings {
   bars: T_BaseCharacterBar[]
@@ -22,6 +21,17 @@ export interface I_Character {
   bars: T_CharacterBar[]
   specials: T_CharacterSpecial[]
   effects: T_CharacterEffectId[]
+  actions: T_CharacterAction[]
+}
+
+export type T_CharacterAction = {
+  id: T_CharacterActionId
+  title: string
+  description: string
+  target: {
+    barId: T_CharacterBarId
+    value: string
+  }
 }
 
 export type T_CharacterBar = {

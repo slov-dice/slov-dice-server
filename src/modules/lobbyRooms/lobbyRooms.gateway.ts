@@ -338,4 +338,74 @@ export class LobbyRoomsGateway
       .to(data.roomId)
       .emit(E_Subscribe.getRemovedCharacterInCharactersWindow, response)
   }
+
+  @SubscribeMessage(E_Emit.createDummyInBattlefieldWindow)
+  createDummyInBattlefieldWindow(
+    client: Socket,
+    data: I_EmitPayload[E_Emit.createDummyInBattlefieldWindow],
+  ) {
+    const roomDummy = this.lobbyRooms.createDummyInBattlefieldWindow(
+      data.roomId,
+      data.dummy,
+      data.field,
+    )
+
+    const response: I_SubscriptionData[E_Subscribe.getCreatedDummyInBattlefieldWindow] =
+      {
+        field: data.field,
+        dummy: roomDummy,
+      }
+
+    this.server
+      .to(data.roomId)
+      .emit(E_Subscribe.getCreatedDummyInBattlefieldWindow, response)
+  }
+
+  @SubscribeMessage(E_Emit.addDummyToFieldInBattlefieldWindow)
+  addDummyToFieldInBattlefieldWindow(
+    client: Socket,
+    data: I_EmitPayload[E_Emit.addDummyToFieldInBattlefieldWindow],
+  ) {
+    const fieldDummies = this.lobbyRooms.addDummyToFieldInBattlefieldWindow(
+      data.roomId,
+      data.dummy,
+      data.field,
+    )
+
+    const response: I_SubscriptionData[E_Subscribe.getDummiesOnFieldInBattlefieldWindow] =
+      {
+        dummies: fieldDummies,
+        field: data.field,
+      }
+
+    this.server
+      .to(data.roomId)
+      .emit(E_Subscribe.getDummiesOnFieldInBattlefieldWindow, response)
+  }
+
+  @SubscribeMessage(E_Emit.makeActionInBattlefieldWindow)
+  makeActionInBattlefieldWindow(
+    client: Socket,
+    data: I_EmitPayload[E_Emit.makeActionInBattlefieldWindow],
+  ) {
+    const { characters, masterField, playersField } =
+      this.lobbyRooms.makeActionInBattlefieldWindow(
+        data.roomId,
+        data.action,
+        data.actionTarget,
+      )
+
+    const response: I_SubscriptionData[E_Subscribe.getInitiationActionInBattlefieldWindow] =
+      {
+        characters,
+        masterField,
+        playersField,
+        to: { id: data.actionTarget },
+        from: { id: data.actionInitiator },
+      }
+
+    this.server
+      .to(data.roomId)
+      .emit(E_Subscribe.getInitiationActionInBattlefieldWindow, response)
+  }
 }

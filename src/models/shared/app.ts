@@ -1,4 +1,5 @@
 import { I_Character, I_CharactersSettings } from './game/character'
+import { T_BaseDummy, T_Dummy } from './game/dummy'
 
 export type T_SocketId = string
 export type T_UserId = number
@@ -48,6 +49,7 @@ export enum E_Locale {
   ru = 'RU',
   en = 'EN',
 }
+
 export type T_LocaleText = Record<E_Locale, string>
 
 export type T_SocketDataStatus = {
@@ -116,6 +118,14 @@ export type I_FullRoomGame = {
       characters: I_Character[]
     }
     settings: I_CharactersSettings
+  }
+  battlefield: {
+    window: {
+      masterField: T_Dummy[]
+      playersField: T_Dummy[]
+      masterDummies: T_BaseDummy[]
+      playersDummies: T_BaseDummy[]
+    }
   }
 }
 

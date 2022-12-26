@@ -26,10 +26,12 @@ import {
   T_BaseCharacterBar,
   T_BaseCharacterEffect,
   T_BaseCharacterSpecial,
+  T_CharacterAction,
   T_CharacterBar,
   T_CharacterId,
   T_CharacterSpecial,
 } from 'models/shared/game/character'
+import { T_BaseDummy, T_Dummy, T_DummyId } from 'models/shared/game/dummy'
 
 @Injectable()
 export class LobbyRoomsService {
@@ -324,6 +326,103 @@ export class LobbyRoomsService {
         (character) => character.id !== characterId,
       )
     return characterId
+  }
+
+  createDummyInBattlefieldWindow(
+    roomId: T_RoomId,
+    dummy: T_BaseDummy,
+    field: 'master' | 'players',
+  ): T_BaseDummy {
+    const room = this.findRoomById(roomId)
+    if (field === 'master') {
+      room.game.battlefield.window.masterDummies.push(dummy)
+    }
+    if (field === 'players') {
+      room.game.battlefield.window.playersDummies.push(dummy)
+    }
+    return dummy
+  }
+
+  addDummyToFieldInBattlefieldWindow(
+    roomId: T_RoomId,
+    dummy: T_BaseDummy,
+    field: 'master' | 'players',
+  ): T_Dummy[] {
+    const room = this.findRoomById(roomId)
+    const fieldDummy: T_Dummy = {
+      id: dummy.id,
+      subId: v4(),
+      barsCurrent: dummy.barsMax.map((bar) => ({ id: bar.id, value: bar.max })),
+    }
+    if (field === 'master') {
+      room.game.battlefield.window.masterField.push(fieldDummy)
+      return room.game.battlefield.window.masterField
+    }
+    if (field === 'players') {
+      room.game.battlefield.window.playersField.push(fieldDummy)
+      return room.game.battlefield.window.playersField
+    }
+  }
+
+  makeActionInBattlefieldWindow(
+    roomId: T_RoomId,
+    action: T_CharacterAction,
+    actionTarget: T_DummyId | T_CharacterId,
+  ): {
+    characters: I_Character[]
+    masterField: T_Dummy[]
+    playersField: T_Dummy[]
+  } {
+    const room = this.findRoomById(roomId)
+
+    const targetDummyMasterField =
+      room.game.battlefield.window.masterField.find(
+        (dummy) => dummy.subId === actionTarget,
+      )
+
+    // Если цель находится на поле ведущего
+    if (targetDummyMasterField) {
+      const targetBar = targetDummyMasterField.barsCurrent.find(
+        (bar) => bar.id === action.target.barId,
+      )
+
+      if (targetBar) {
+        targetBar.value += Number(action.target.value)
+      }
+    }
+
+    // Если цель находится на поле игроков
+    const targetDummyPlayersField =
+      room.game.battlefield.window.playersField.find(
+        (dummy) => dummy.subId === actionTarget,
+      )
+    if (targetDummyPlayersField) {
+      const targetBar = targetDummyPlayersField.barsCurrent.find(
+        (bar) => bar.id === action.target.barId,
+      )
+      if (targetBar) {
+        targetBar.value += Number(action.target.value)
+      }
+    }
+
+    // Если цель является персонажем
+    const targetCharacter = room.game.characters.window.characters.find(
+      (character) => character.id === actionTarget,
+    )
+    if (targetCharacter) {
+      const targetBar = targetCharacter.bars.find(
+        (bar) => bar.id === action.target.barId,
+      )
+      if (targetBar) {
+        targetBar.current += Number(action.target.value)
+      }
+    }
+
+    return {
+      characters: room.game.characters.window.characters,
+      masterField: room.game.battlefield.window.masterField,
+      playersField: room.game.battlefield.window.playersField,
+    }
   }
 
   getRoomMessages(roomId: T_RoomId): I_RoomMessage[] {
