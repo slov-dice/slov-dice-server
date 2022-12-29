@@ -408,4 +408,29 @@ export class LobbyRoomsGateway
       .to(data.roomId)
       .emit(E_Subscribe.getInitiationActionInBattlefieldWindow, response)
   }
+
+  @SubscribeMessage(E_Emit.updateDummyFieldInBattlefieldWindow)
+  updateDummyFieldInBattlefieldWindow(
+    client: Socket,
+    data: I_EmitPayload[E_Emit.updateDummyFieldInBattlefieldWindow],
+  ) {
+    const roomDummy = this.lobbyRooms.updateDummyFieldInBattlefieldWindow(
+      data.roomId,
+      data.dummyId,
+      data.field,
+      data.value,
+      data.battlefield,
+      data.subFieldId,
+    )
+
+    const response: I_SubscriptionData[E_Subscribe.getUpdatedDummyInBattlefieldWindow] =
+      {
+        dummy: roomDummy,
+        field: data.battlefield,
+      }
+
+    this.server
+      .to(data.roomId)
+      .emit(E_Subscribe.getUpdatedDummyInBattlefieldWindow, response)
+  }
 }

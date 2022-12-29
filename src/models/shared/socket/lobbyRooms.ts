@@ -40,6 +40,7 @@ export enum E_Subscribe {
   getCreatedDummyInBattlefieldWindow = 'getCreatedDummyInBattlefieldWindow',
   getDummiesOnFieldInBattlefieldWindow = 'getDummiesOnFieldInBattlefieldWindow',
   getInitiationActionInBattlefieldWindow = 'getInitiationActionInBattlefieldWindow',
+  getUpdatedDummyInBattlefieldWindow = 'getUpdatedDummyInBattlefieldWindow',
 }
 
 export interface I_SubscriptionData {
@@ -101,6 +102,10 @@ export interface I_SubscriptionData {
     masterField: T_Dummy[]
     playersField: T_Dummy[]
   }
+  [E_Subscribe.getUpdatedDummyInBattlefieldWindow]: {
+    dummy: T_BaseDummy
+    field: E_Field
+  }
 }
 
 export enum E_Emit {
@@ -126,6 +131,7 @@ export enum E_Emit {
   createDummyInBattlefieldWindow = 'createDummyInBattlefieldWindow',
   addDummyToFieldInBattlefieldWindow = 'addDummyToFieldInBattlefieldWindow',
   makeActionInBattlefieldWindow = 'makeActionInBattlefieldWindow',
+  updateDummyFieldInBattlefieldWindow = 'updateDummyFieldInBattlefieldWindow',
 }
 
 export interface I_EmitPayload {
@@ -186,6 +192,8 @@ export interface I_EmitPayload {
     roomId: T_RoomId
     characterId: string
   }
+
+  // Battlefield window
   [E_Emit.createDummyInBattlefieldWindow]: {
     roomId: T_RoomId
     field: E_Field
@@ -201,5 +209,13 @@ export interface I_EmitPayload {
     actionTarget: T_DummyId | T_CharacterId
     actionInitiator: T_DummyId | T_CharacterId
     action: T_CharacterAction
+  }
+  [E_Emit.updateDummyFieldInBattlefieldWindow]: {
+    roomId: T_RoomId
+    dummyId: T_DummyId
+    battlefield: E_Field
+    field: string
+    value: string | number
+    subFieldId?: string
   }
 }

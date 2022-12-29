@@ -31,7 +31,13 @@ import {
   T_CharacterId,
   T_CharacterSpecial,
 } from 'models/shared/game/character'
-import { T_BaseDummy, T_Dummy, T_DummyId } from 'models/shared/game/dummy'
+import {
+  T_BaseDummy,
+  T_Dummy,
+  T_DummyBarsMax,
+  T_DummyId,
+} from 'models/shared/game/dummy'
+import { E_Field } from 'models/shared/game/battlefield'
 
 @Injectable()
 export class LobbyRoomsService {
@@ -283,7 +289,7 @@ export class LobbyRoomsService {
 
   updateCharacterFieldInCharactersWindow(
     roomId: T_RoomId,
-    characterId: string,
+    characterId: T_CharacterId,
     field: string,
     value: string | number,
     subFieldId?: string,
@@ -346,7 +352,7 @@ export class LobbyRoomsService {
   addDummyToFieldInBattlefieldWindow(
     roomId: T_RoomId,
     dummy: T_BaseDummy,
-    field: 'master' | 'players',
+    field: E_Field,
   ): T_Dummy[] {
     const room = this.findRoomById(roomId)
     const fieldDummy: T_Dummy = {
@@ -354,11 +360,11 @@ export class LobbyRoomsService {
       subId: v4(),
       barsCurrent: dummy.barsMax.map((bar) => ({ id: bar.id, value: bar.max })),
     }
-    if (field === 'master') {
+    if (field === E_Field.master) {
       room.game.battlefield.window.masterField.push(fieldDummy)
       return room.game.battlefield.window.masterField
     }
-    if (field === 'players') {
+    if (field === E_Field.players) {
       room.game.battlefield.window.playersField.push(fieldDummy)
       return room.game.battlefield.window.playersField
     }
@@ -423,6 +429,33 @@ export class LobbyRoomsService {
       masterField: room.game.battlefield.window.masterField,
       playersField: room.game.battlefield.window.playersField,
     }
+  }
+
+  updateDummyFieldInBattlefieldWindow(
+    roomId: T_RoomId,
+    dummyId: T_DummyId,
+    field: string,
+    value: string | number,
+    battlefield: E_Field,
+    subFieldId?: string,
+  ): T_BaseDummy {
+    const room = this.findRoomById(roomId)
+
+    const baseDummy = room.game.battlefield.window[
+      battlefield === E_Field.master ? 'masterDummies' : 'playersDummies'
+    ].find((dummy) => dummy.id === dummyId)
+    console.log('baseDummy', baseDummy)
+    if (subFieldId) {
+      baseDummy[field] = baseDummy[field].map((item: T_DummyBarsMax) =>
+        item.id === subFieldId ? { ...item, max: value } : item,
+      )
+    }
+
+    if (!subFieldId) {
+      baseDummy[field] = value
+    }
+
+    return baseDummy
   }
 
   getRoomMessages(roomId: T_RoomId): I_RoomMessage[] {
