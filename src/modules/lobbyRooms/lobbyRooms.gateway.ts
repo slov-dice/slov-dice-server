@@ -183,13 +183,15 @@ export class LobbyRoomsGateway
     client: Socket,
     { roomId, bars }: I_EmitPayload[E_Emit.updateCharactersWindowSettingsBars],
   ): void {
-    const { settingsBars, characters } =
+    const { settingsBars, characters, masterDummies, playersDummies } =
       this.lobbyRooms.updateCharactersWindowSettingsBars(roomId, bars)
 
     const response: I_SubscriptionData[E_Subscribe.getCharactersWindowSettingsBars] =
       {
         bars: settingsBars,
         characters,
+        masterDummies,
+        playersDummies,
         message: t('room.success.characters.settings.bars'),
         status: E_StatusServerMessage.info,
       }
@@ -383,6 +385,54 @@ export class LobbyRoomsGateway
       .emit(E_Subscribe.getDummiesOnFieldInBattlefieldWindow, response)
   }
 
+  @SubscribeMessage(E_Emit.removeDummiesOnFieldInBattlefieldWindow)
+  removeDummiesOnFieldInBattlefieldWindow(
+    client: Socket,
+    data: I_EmitPayload[E_Emit.removeDummiesOnFieldInBattlefieldWindow],
+  ) {
+    const fieldDummies =
+      this.lobbyRooms.removeDummiesOnFieldInBattlefieldWindow(
+        data.roomId,
+        data.dummyId,
+        data.field,
+      )
+
+    const response: I_SubscriptionData[E_Subscribe.getDummiesOnFieldInBattlefieldWindow] =
+      {
+        dummies: fieldDummies,
+        field: data.field,
+      }
+
+    this.server
+      .to(data.roomId)
+      .emit(E_Subscribe.getDummiesOnFieldInBattlefieldWindow, response)
+  }
+
+  @SubscribeMessage(E_Emit.updateDummyFieldOnFieldInBattlefieldWindow)
+  updateDummyFieldOnFieldInBattlefieldWindow(
+    client: Socket,
+    data: I_EmitPayload[E_Emit.updateDummyFieldOnFieldInBattlefieldWindow],
+  ) {
+    const fieldDummies =
+      this.lobbyRooms.updateDummyFieldOnFieldInBattlefieldWindow(
+        data.roomId,
+        data.battlefield,
+        data.field,
+        data.dummySubId,
+        data.value,
+        data.subFieldId,
+      )
+    const response: I_SubscriptionData[E_Subscribe.getDummiesOnFieldInBattlefieldWindow] =
+      {
+        dummies: fieldDummies,
+        field: data.battlefield,
+      }
+
+    this.server
+      .to(data.roomId)
+      .emit(E_Subscribe.getDummiesOnFieldInBattlefieldWindow, response)
+  }
+
   @SubscribeMessage(E_Emit.makeActionInBattlefieldWindow)
   makeActionInBattlefieldWindow(
     client: Socket,
@@ -432,5 +482,71 @@ export class LobbyRoomsGateway
     this.server
       .to(data.roomId)
       .emit(E_Subscribe.getUpdatedDummyInBattlefieldWindow, response)
+  }
+
+  @SubscribeMessage(E_Emit.updateDummyInBattlefieldWindow)
+  updateDummyInBattlefieldWindow(
+    client: Socket,
+    data: I_EmitPayload[E_Emit.updateDummyInBattlefieldWindow],
+  ) {
+    const roomDummy = this.lobbyRooms.updateDummyInBattlefieldWindow(
+      data.roomId,
+      data.dummy,
+      data.field,
+    )
+
+    const response: I_SubscriptionData[E_Subscribe.getUpdatedDummyInBattlefieldWindow] =
+      {
+        dummy: roomDummy,
+        field: data.field,
+      }
+
+    this.server
+      .to(data.roomId)
+      .emit(E_Subscribe.getUpdatedDummyInBattlefieldWindow, response)
+  }
+
+  @SubscribeMessage(E_Emit.removeDummyInBattlefieldWindow)
+  removeDummyInBattlefieldWindow(
+    client: Socket,
+    data: I_EmitPayload[E_Emit.removeDummyInBattlefieldWindow],
+  ) {
+    const roomDummyId = this.lobbyRooms.removeDummyInBattlefieldWindow(
+      data.roomId,
+      data.dummyId,
+      data.field,
+    )
+
+    const response: I_SubscriptionData[E_Subscribe.getRemovedDummyInBattlefieldWindow] =
+      {
+        dummyId: roomDummyId,
+        field: data.field,
+      }
+
+    this.server
+      .to(data.roomId)
+      .emit(E_Subscribe.getRemovedDummyInBattlefieldWindow, response)
+  }
+
+  @SubscribeMessage(E_Emit.removeDummyOnFieldInBattlefieldWindow)
+  removeDummyOnFieldInBattlefieldWindow(
+    client: Socket,
+    data: I_EmitPayload[E_Emit.removeDummyOnFieldInBattlefieldWindow],
+  ) {
+    const fieldDummies = this.lobbyRooms.removeDummyOnFieldInBattlefieldWindow(
+      data.roomId,
+      data.dummySubId,
+      data.field,
+    )
+
+    const response: I_SubscriptionData[E_Subscribe.getDummiesOnFieldInBattlefieldWindow] =
+      {
+        dummies: fieldDummies,
+        field: data.field,
+      }
+
+    this.server
+      .to(data.roomId)
+      .emit(E_Subscribe.getDummiesOnFieldInBattlefieldWindow, response)
   }
 }

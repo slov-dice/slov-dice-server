@@ -34,6 +34,7 @@ import {
 import {
   T_BaseDummy,
   T_Dummy,
+  T_DummyBarsCurrent,
   T_DummyBarsMax,
   T_DummyId,
 } from 'models/shared/game/dummy'
@@ -174,7 +175,12 @@ export class LobbyRoomsService {
   updateCharactersWindowSettingsBars(
     roomId: T_RoomId,
     bars: T_BaseCharacterBar[],
-  ): { settingsBars: T_BaseCharacterBar[]; characters: I_Character[] } {
+  ): {
+    settingsBars: T_BaseCharacterBar[]
+    characters: I_Character[]
+    masterDummies: T_BaseDummy[]
+    playersDummies: T_BaseDummy[]
+  } {
     const room = this.findRoomById(roomId)
     room.game.characters.settings.bars = bars
 
@@ -196,9 +202,46 @@ export class LobbyRoomsService {
         return acc
       }, [])
 
+    room.game.battlefield.window.masterDummies =
+      room.game.battlefield.window.masterDummies.reduce((acc, dummy) => {
+        dummy.barsMax = bars.reduce((acc, settingsBar) => {
+          const dummyBar = dummy.barsMax.find(
+            (dummyBar) => settingsBar.id === dummyBar.id,
+          )
+          if (dummyBar) {
+            acc.push(dummyBar)
+          }
+          if (!dummyBar) {
+            acc.push({ id: settingsBar.id, max: 100, include: false })
+          }
+          return acc
+        }, [] as T_DummyBarsMax[])
+        acc.push(dummy)
+        return acc
+      }, [])
+
+    room.game.battlefield.window.playersDummies =
+      room.game.battlefield.window.playersDummies.reduce((acc, dummy) => {
+        dummy.barsMax = bars.reduce((acc, settingsBar) => {
+          const dummyBar = dummy.barsMax.find(
+            (dummyBar) => settingsBar.id === dummyBar.id,
+          )
+          if (dummyBar) {
+            acc.push(dummyBar)
+          }
+          if (!dummyBar) {
+            acc.push({ id: settingsBar.id, max: 100, include: false })
+          }
+          return acc
+        }, [] as T_DummyBarsMax[])
+        acc.push(dummy)
+        return acc
+      }, [])
     return {
       settingsBars: room.game.characters.settings.bars,
       characters: room.game.characters.window.characters,
+      masterDummies: room.game.battlefield.window.masterDummies,
+      playersDummies: room.game.battlefield.window.playersDummies,
     }
   }
 
@@ -370,6 +413,29 @@ export class LobbyRoomsService {
     }
   }
 
+  removeDummiesOnFieldInBattlefieldWindow(
+    roomId: T_RoomId,
+    dummyId: T_DummyId,
+    field: E_Field,
+  ) {
+    const room = this.findRoomById(roomId)
+
+    if (field === E_Field.master) {
+      room.game.battlefield.window.masterField =
+        room.game.battlefield.window.masterField.filter(
+          (dummy) => dummy.id !== dummyId,
+        )
+      return room.game.battlefield.window.masterField
+    }
+    if (field === E_Field.players) {
+      room.game.battlefield.window.playersField =
+        room.game.battlefield.window.playersField.filter(
+          (dummy) => dummy.id !== dummyId,
+        )
+      return room.game.battlefield.window.playersField
+    }
+  }
+
   makeActionInBattlefieldWindow(
     roomId: T_RoomId,
     action: T_CharacterAction,
@@ -444,7 +510,6 @@ export class LobbyRoomsService {
     const baseDummy = room.game.battlefield.window[
       battlefield === E_Field.master ? 'masterDummies' : 'playersDummies'
     ].find((dummy) => dummy.id === dummyId)
-    console.log('baseDummy', baseDummy)
     if (subFieldId) {
       baseDummy[field] = baseDummy[field].map((item: T_DummyBarsMax) =>
         item.id === subFieldId ? { ...item, max: value } : item,
@@ -456,6 +521,84 @@ export class LobbyRoomsService {
     }
 
     return baseDummy
+  }
+
+  updateDummyInBattlefieldWindow(
+    roomId: T_RoomId,
+    dummy: T_BaseDummy,
+    field: E_Field,
+  ): T_BaseDummy {
+    const room = this.findRoomById(roomId)
+    room.game.battlefield.window[
+      field === E_Field.master ? 'masterDummies' : 'playersDummies'
+    ] = room.game.battlefield.window[
+      field === E_Field.master ? 'masterDummies' : 'playersDummies'
+    ].map((fieldDummy) => (fieldDummy.id === dummy.id ? dummy : fieldDummy))
+
+    return dummy
+  }
+
+  updateDummyFieldOnFieldInBattlefieldWindow(
+    roomId: T_RoomId,
+    battlefield: E_Field,
+    field: string,
+    dummySubId: string,
+    value: string,
+    subFieldId: string,
+  ) {
+    const room = this.findRoomById(roomId)
+    const dummy = room.game.battlefield.window[
+      battlefield === E_Field.master ? 'masterField' : 'playersField'
+    ].find((dummy) => dummy.subId === dummySubId)
+
+    if (subFieldId) {
+      dummy[field] = dummy[field].map((item: T_DummyBarsCurrent) =>
+        item.id === subFieldId ? { ...item, value } : item,
+      )
+    }
+
+    return room.game.battlefield.window[
+      battlefield === E_Field.master ? 'masterField' : 'playersField'
+    ]
+  }
+
+  removeDummyInBattlefieldWindow(
+    roomId: T_RoomId,
+    dummyId: T_DummyId,
+    field: E_Field,
+  ) {
+    const room = this.findRoomById(roomId)
+    room.game.battlefield.window[
+      field === E_Field.master ? 'masterDummies' : 'playersDummies'
+    ] = room.game.battlefield.window[
+      field === E_Field.master ? 'masterDummies' : 'playersDummies'
+    ].filter((dummy) => dummy.id !== dummyId)
+
+    room.game.battlefield.window[
+      field === E_Field.master ? 'masterField' : 'playersField'
+    ] = room.game.battlefield.window[
+      field === E_Field.master ? 'masterField' : 'playersField'
+    ].filter((dummy) => dummy.id !== dummyId)
+
+    return dummyId
+  }
+
+  removeDummyOnFieldInBattlefieldWindow(
+    roomId: T_RoomId,
+    dummySubId: string,
+    field: E_Field,
+  ) {
+    const room = this.findRoomById(roomId)
+
+    room.game.battlefield.window[
+      field === E_Field.master ? 'masterField' : 'playersField'
+    ] = room.game.battlefield.window[
+      field === E_Field.master ? 'masterField' : 'playersField'
+    ].filter((dummy) => dummy.subId !== dummySubId)
+
+    return room.game.battlefield.window[
+      field === E_Field.master ? 'masterField' : 'playersField'
+    ]
   }
 
   getRoomMessages(roomId: T_RoomId): I_RoomMessage[] {
