@@ -26,9 +26,19 @@ import {
   T_BaseCharacterBar,
   T_BaseCharacterEffect,
   T_BaseCharacterSpecial,
+  T_CharacterAction,
   T_CharacterBar,
+  T_CharacterId,
   T_CharacterSpecial,
 } from 'models/shared/game/character'
+import {
+  T_BaseDummy,
+  T_Dummy,
+  T_DummyBarsCurrent,
+  T_DummyBarsMax,
+  T_DummyId,
+} from 'models/shared/game/dummy'
+import { E_Field } from 'models/shared/game/battlefield'
 
 @Injectable()
 export class LobbyRoomsService {
@@ -162,10 +172,16 @@ export class LobbyRoomsService {
     return this.rooms.find((room) => room.id === roomId)
   }
 
+  // Функции окна персонажей
   updateCharactersWindowSettingsBars(
     roomId: T_RoomId,
     bars: T_BaseCharacterBar[],
-  ): { settingsBars: T_BaseCharacterBar[]; characters: I_Character[] } {
+  ): {
+    settingsBars: T_BaseCharacterBar[]
+    characters: I_Character[]
+    masterDummies: T_BaseDummy[]
+    playersDummies: T_BaseDummy[]
+  } {
     const room = this.findRoomById(roomId)
     room.game.characters.settings.bars = bars
 
@@ -187,9 +203,46 @@ export class LobbyRoomsService {
         return acc
       }, [])
 
+    room.game.battlefield.window.masterDummies =
+      room.game.battlefield.window.masterDummies.reduce((acc, dummy) => {
+        dummy.barsMax = bars.reduce((acc, settingsBar) => {
+          const dummyBar = dummy.barsMax.find(
+            (dummyBar) => settingsBar.id === dummyBar.id,
+          )
+          if (dummyBar) {
+            acc.push(dummyBar)
+          }
+          if (!dummyBar) {
+            acc.push({ id: settingsBar.id, max: 100, include: false })
+          }
+          return acc
+        }, [] as T_DummyBarsMax[])
+        acc.push(dummy)
+        return acc
+      }, [])
+
+    room.game.battlefield.window.playersDummies =
+      room.game.battlefield.window.playersDummies.reduce((acc, dummy) => {
+        dummy.barsMax = bars.reduce((acc, settingsBar) => {
+          const dummyBar = dummy.barsMax.find(
+            (dummyBar) => settingsBar.id === dummyBar.id,
+          )
+          if (dummyBar) {
+            acc.push(dummyBar)
+          }
+          if (!dummyBar) {
+            acc.push({ id: settingsBar.id, max: 100, include: false })
+          }
+          return acc
+        }, [] as T_DummyBarsMax[])
+        acc.push(dummy)
+        return acc
+      }, [])
     return {
       settingsBars: room.game.characters.settings.bars,
       characters: room.game.characters.window.characters,
+      masterDummies: room.game.battlefield.window.masterDummies,
+      playersDummies: room.game.battlefield.window.playersDummies,
     }
   }
 
@@ -280,7 +333,7 @@ export class LobbyRoomsService {
 
   updateCharacterFieldInCharactersWindow(
     roomId: T_RoomId,
-    characterId: string,
+    characterId: T_CharacterId,
     field: string,
     value: string | number,
     subFieldId?: string,
@@ -313,10 +366,248 @@ export class LobbyRoomsService {
     return character
   }
 
+  removeCharacterInCharactersWindow(
+    roomId: T_RoomId,
+    characterId: T_CharacterId,
+  ) {
+    const room = this.findRoomById(roomId)
+    room.game.characters.window.characters =
+      room.game.characters.window.characters.filter(
+        (character) => character.id !== characterId,
+      )
+    return characterId
+  }
+
+  // Функции окна поля боя
+  createDummyInBattlefieldWindow(
+    roomId: T_RoomId,
+    dummy: T_BaseDummy,
+    field: 'master' | 'players',
+  ): T_BaseDummy {
+    const room = this.findRoomById(roomId)
+    if (field === 'master') {
+      room.game.battlefield.window.masterDummies.push(dummy)
+    }
+    if (field === 'players') {
+      room.game.battlefield.window.playersDummies.push(dummy)
+    }
+    return dummy
+  }
+
+  addDummyToFieldInBattlefieldWindow(
+    roomId: T_RoomId,
+    dummy: T_BaseDummy,
+    field: E_Field,
+  ): T_Dummy[] {
+    const room = this.findRoomById(roomId)
+    const fieldDummy: T_Dummy = {
+      id: dummy.id,
+      subId: v4(),
+      barsCurrent: dummy.barsMax.map((bar) => ({ id: bar.id, value: bar.max })),
+    }
+    if (field === E_Field.master) {
+      room.game.battlefield.window.masterField.push(fieldDummy)
+      return room.game.battlefield.window.masterField
+    }
+    if (field === E_Field.players) {
+      room.game.battlefield.window.playersField.push(fieldDummy)
+      return room.game.battlefield.window.playersField
+    }
+  }
+
+  removeDummiesOnFieldInBattlefieldWindow(
+    roomId: T_RoomId,
+    dummyId: T_DummyId,
+    field: E_Field,
+  ) {
+    const room = this.findRoomById(roomId)
+
+    if (field === E_Field.master) {
+      room.game.battlefield.window.masterField =
+        room.game.battlefield.window.masterField.filter(
+          (dummy) => dummy.id !== dummyId,
+        )
+      return room.game.battlefield.window.masterField
+    }
+    if (field === E_Field.players) {
+      room.game.battlefield.window.playersField =
+        room.game.battlefield.window.playersField.filter(
+          (dummy) => dummy.id !== dummyId,
+        )
+      return room.game.battlefield.window.playersField
+    }
+  }
+
+  makeActionInBattlefieldWindow(
+    roomId: T_RoomId,
+    action: T_CharacterAction,
+    actionTarget: T_DummyId | T_CharacterId,
+  ): {
+    characters: I_Character[]
+    masterField: T_Dummy[]
+    playersField: T_Dummy[]
+  } {
+    const room = this.findRoomById(roomId)
+
+    const targetDummyMasterField =
+      room.game.battlefield.window.masterField.find(
+        (dummy) => dummy.subId === actionTarget,
+      )
+
+    // Если цель находится на поле ведущего
+    if (targetDummyMasterField) {
+      const targetBar = targetDummyMasterField.barsCurrent.find(
+        (bar) => bar.id === action.target.barId,
+      )
+
+      if (targetBar) {
+        targetBar.value += Number(action.target.value)
+      }
+    }
+
+    // Если цель находится на поле игроков
+    const targetDummyPlayersField =
+      room.game.battlefield.window.playersField.find(
+        (dummy) => dummy.subId === actionTarget,
+      )
+    if (targetDummyPlayersField) {
+      const targetBar = targetDummyPlayersField.barsCurrent.find(
+        (bar) => bar.id === action.target.barId,
+      )
+      if (targetBar) {
+        targetBar.value += Number(action.target.value)
+      }
+    }
+
+    // Если цель является персонажем
+    const targetCharacter = room.game.characters.window.characters.find(
+      (character) => character.id === actionTarget,
+    )
+    if (targetCharacter) {
+      const targetBar = targetCharacter.bars.find(
+        (bar) => bar.id === action.target.barId,
+      )
+      if (targetBar) {
+        targetBar.current += Number(action.target.value)
+      }
+    }
+
+    return {
+      characters: room.game.characters.window.characters,
+      masterField: room.game.battlefield.window.masterField,
+      playersField: room.game.battlefield.window.playersField,
+    }
+  }
+
+  updateDummyFieldInBattlefieldWindow(
+    roomId: T_RoomId,
+    dummyId: T_DummyId,
+    field: string,
+    value: string | number,
+    battlefield: E_Field,
+    subFieldId?: string,
+  ): T_BaseDummy {
+    const room = this.findRoomById(roomId)
+
+    const baseDummy = room.game.battlefield.window[
+      battlefield === E_Field.master ? 'masterDummies' : 'playersDummies'
+    ].find((dummy) => dummy.id === dummyId)
+    if (subFieldId) {
+      baseDummy[field] = baseDummy[field].map((item: T_DummyBarsMax) =>
+        item.id === subFieldId ? { ...item, max: value } : item,
+      )
+    }
+
+    if (!subFieldId) {
+      baseDummy[field] = value
+    }
+
+    return baseDummy
+  }
+
+  updateDummyInBattlefieldWindow(
+    roomId: T_RoomId,
+    dummy: T_BaseDummy,
+    field: E_Field,
+  ): T_BaseDummy {
+    const room = this.findRoomById(roomId)
+    room.game.battlefield.window[
+      field === E_Field.master ? 'masterDummies' : 'playersDummies'
+    ] = room.game.battlefield.window[
+      field === E_Field.master ? 'masterDummies' : 'playersDummies'
+    ].map((fieldDummy) => (fieldDummy.id === dummy.id ? dummy : fieldDummy))
+
+    return dummy
+  }
+
+  updateDummyFieldOnFieldInBattlefieldWindow(
+    roomId: T_RoomId,
+    battlefield: E_Field,
+    field: string,
+    dummySubId: string,
+    value: string,
+    subFieldId: string,
+  ) {
+    const room = this.findRoomById(roomId)
+    const dummy = room.game.battlefield.window[
+      battlefield === E_Field.master ? 'masterField' : 'playersField'
+    ].find((dummy) => dummy.subId === dummySubId)
+
+    if (subFieldId) {
+      dummy[field] = dummy[field].map((item: T_DummyBarsCurrent) =>
+        item.id === subFieldId ? { ...item, value } : item,
+      )
+    }
+
+    return room.game.battlefield.window[
+      battlefield === E_Field.master ? 'masterField' : 'playersField'
+    ]
+  }
+
+  removeDummyInBattlefieldWindow(
+    roomId: T_RoomId,
+    dummyId: T_DummyId,
+    field: E_Field,
+  ) {
+    const room = this.findRoomById(roomId)
+    room.game.battlefield.window[
+      field === E_Field.master ? 'masterDummies' : 'playersDummies'
+    ] = room.game.battlefield.window[
+      field === E_Field.master ? 'masterDummies' : 'playersDummies'
+    ].filter((dummy) => dummy.id !== dummyId)
+
+    room.game.battlefield.window[
+      field === E_Field.master ? 'masterField' : 'playersField'
+    ] = room.game.battlefield.window[
+      field === E_Field.master ? 'masterField' : 'playersField'
+    ].filter((dummy) => dummy.id !== dummyId)
+
+    return dummyId
+  }
+
+  removeDummyOnFieldInBattlefieldWindow(
+    roomId: T_RoomId,
+    dummySubId: string,
+    field: E_Field,
+  ) {
+    const room = this.findRoomById(roomId)
+
+    room.game.battlefield.window[
+      field === E_Field.master ? 'masterField' : 'playersField'
+    ] = room.game.battlefield.window[
+      field === E_Field.master ? 'masterField' : 'playersField'
+    ].filter((dummy) => dummy.subId !== dummySubId)
+
+    return room.game.battlefield.window[
+      field === E_Field.master ? 'masterField' : 'playersField'
+    ]
+  }
+
   getRoomMessages(roomId: T_RoomId): I_RoomMessage[] {
     return this.rooms.find((room) => room.id === roomId).messages
   }
 
+  // Создание сообщений в чате комнаты
   createMessage(
     socketId: T_SocketId,
     roomId: T_RoomId,

@@ -57,4 +57,12 @@ export const lobbyRoomGameInstance = (): I_FullRoomGame => ({
       ],
     },
   },
+  battlefield: {
+    window: {
+      masterDummies: [],
+      masterField: [],
+      playersDummies: [],
+      playersField: [],
+    },
+  },
 })
