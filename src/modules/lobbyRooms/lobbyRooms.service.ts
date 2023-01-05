@@ -172,6 +172,7 @@ export class LobbyRoomsService {
     return this.rooms.find((room) => room.id === roomId)
   }
 
+  // Функции окна персонажей
   updateCharactersWindowSettingsBars(
     roomId: T_RoomId,
     bars: T_BaseCharacterBar[],
@@ -377,6 +378,7 @@ export class LobbyRoomsService {
     return characterId
   }
 
+  // Функции окна поля боя
   createDummyInBattlefieldWindow(
     roomId: T_RoomId,
     dummy: T_BaseDummy,
@@ -605,6 +607,7 @@ export class LobbyRoomsService {
     return this.rooms.find((room) => room.id === roomId).messages
   }
 
+  // Создание сообщений в чате комнаты
   createMessage(
     socketId: T_SocketId,
     roomId: T_RoomId,
