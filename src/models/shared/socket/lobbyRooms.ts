@@ -8,7 +8,7 @@ import {
   T_RoomId,
   T_UserId,
 } from 'models/shared/app'
-import { E_Field } from 'models/shared/game/battlefield'
+import { E_Battlefield } from 'models/shared/game/battlefield'
 import {
   I_Character,
   T_BaseCharacterBar,
@@ -37,11 +37,11 @@ export enum E_Subscribe {
   getRemovedCharacterInCharactersWindow = 'getRemovedCharacterInCharactersWindow',
 
   // Battlefield Window
-  getCreatedDummyInBattlefieldWindow = 'getCreatedDummyInBattlefieldWindow',
-  getDummiesOnFieldInBattlefieldWindow = 'getDummiesOnFieldInBattlefieldWindow',
-  getInitiationActionInBattlefieldWindow = 'getInitiationActionInBattlefieldWindow',
-  getUpdatedDummyInBattlefieldWindow = 'getUpdatedDummyInBattlefieldWindow',
-  getRemovedDummyInBattlefieldWindow = 'getRemovedDummyInBattlefieldWindow',
+  getCreatedDummy = 'getCreatedDummy',
+  getDummiesOnBattlefield = 'getDummiesOnBattlefield',
+  getInitiationActionOnBattlefield = 'getInitiationActionOnBattlefield',
+  getUpdatedDummy = 'getUpdatedDummy',
+  getRemovedDummy = 'getRemovedDummy',
 }
 
 export interface I_SubscriptionData {
@@ -92,28 +92,28 @@ export interface I_SubscriptionData {
   }
 
   // Battlefield
-  [E_Subscribe.getCreatedDummyInBattlefieldWindow]: {
+  [E_Subscribe.getCreatedDummy]: {
     dummy: T_BaseDummy
-    field: E_Field
+    battlefield: E_Battlefield
   }
-  [E_Subscribe.getDummiesOnFieldInBattlefieldWindow]: {
+  [E_Subscribe.getDummiesOnBattlefield]: {
     dummies: T_Dummy[]
-    field: E_Field
+    battlefield: E_Battlefield
   }
-  [E_Subscribe.getInitiationActionInBattlefieldWindow]: {
+  [E_Subscribe.getInitiationActionOnBattlefield]: {
     to: { id: T_DummyId | T_CharacterId }
     from: { id: T_DummyId | T_CharacterId }
     characters: I_Character[]
     masterField: T_Dummy[]
     playersField: T_Dummy[]
   }
-  [E_Subscribe.getUpdatedDummyInBattlefieldWindow]: {
+  [E_Subscribe.getUpdatedDummy]: {
     dummy: T_BaseDummy
-    field: E_Field
+    battlefield: E_Battlefield
   }
-  [E_Subscribe.getRemovedDummyInBattlefieldWindow]: {
+  [E_Subscribe.getRemovedDummy]: {
     dummyId: T_DummyId
-    field: E_Field
+    battlefield: E_Battlefield
   }
 }
 
@@ -137,15 +137,15 @@ export enum E_Emit {
   removeCharacterInCharactersWindow = 'removeCharacterInCharactersWindow',
 
   // Battlefield Window
-  createDummyInBattlefieldWindow = 'createDummyInBattlefieldWindow',
-  addDummyToFieldInBattlefieldWindow = 'addDummyToFieldInBattlefieldWindow',
-  makeActionInBattlefieldWindow = 'makeActionInBattlefieldWindow',
-  updateDummyFieldInBattlefieldWindow = 'updateDummyFieldInBattlefieldWindow',
-  updateDummyInBattlefieldWindow = 'updateDummyInBattlefieldWindow',
-  updateDummyFieldOnFieldInBattlefieldWindow = 'updateDummyFieldOnBattlefieldWindow',
-  removeDummyInBattlefieldWindow = 'removeDummyInBattlefieldWindow',
-  removeDummyOnFieldInBattlefieldWindow = 'removeDummyOnFieldInBattlefieldWindow',
-  removeDummiesOnFieldInBattlefieldWindow = 'removeDummiesOnFieldInBattlefieldWindow',
+  createDummy = 'createDummy',
+  addDummyToBattlefield = 'addDummyToBattlefield',
+  makeActionInBattlefield = 'makeActionInBattlefield',
+  updateDummyField = 'updateDummyField',
+  updateDummy = 'updateDummy',
+  updateDummyFieldOnBattlefield = 'updateDummyFieldOnBattlefield',
+  removeDummy = 'removeDummy',
+  removeDummyOnBattlefield = 'removeDummyOnBattlefield',
+  removeDummiesOnBattlefield = 'removeDummiesOnBattlefield',
 }
 
 export interface I_EmitPayload {
@@ -208,56 +208,56 @@ export interface I_EmitPayload {
   }
 
   // Battlefield window
-  [E_Emit.createDummyInBattlefieldWindow]: {
+  [E_Emit.createDummy]: {
     roomId: T_RoomId
-    field: E_Field
+    battlefield: E_Battlefield
     dummy: T_BaseDummy
   }
-  [E_Emit.addDummyToFieldInBattlefieldWindow]: {
+  [E_Emit.addDummyToBattlefield]: {
     roomId: T_RoomId
-    field: E_Field
+    battlefield: E_Battlefield
     dummy: T_BaseDummy
   }
-  [E_Emit.makeActionInBattlefieldWindow]: {
+  [E_Emit.makeActionInBattlefield]: {
     roomId: T_RoomId
     actionTarget: T_DummyId | T_CharacterId
     actionInitiator: T_DummyId | T_CharacterId
     action: T_CharacterAction
   }
-  [E_Emit.updateDummyFieldInBattlefieldWindow]: {
+  [E_Emit.updateDummyField]: {
     roomId: T_RoomId
     dummyId: T_DummyId
-    battlefield: E_Field
+    battlefield: E_Battlefield
     field: string
     value: string | number
     subFieldId?: string
   }
-  [E_Emit.updateDummyInBattlefieldWindow]: {
+  [E_Emit.updateDummy]: {
     roomId: T_RoomId
-    field: E_Field
+    battlefield: E_Battlefield
     dummy: T_BaseDummy
   }
-  [E_Emit.updateDummyFieldOnFieldInBattlefieldWindow]: {
+  [E_Emit.updateDummyFieldOnBattlefield]: {
     roomId: T_RoomId
     dummySubId: string
     field: string
-    battlefield: E_Field
+    battlefield: E_Battlefield
     subFieldId?: string
     value: string
   }
-  [E_Emit.removeDummyInBattlefieldWindow]: {
+  [E_Emit.removeDummy]: {
     roomId: T_RoomId
     dummyId: T_DummyId
-    field: E_Field
+    battlefield: E_Battlefield
   }
-  [E_Emit.removeDummiesOnFieldInBattlefieldWindow]: {
-    roomId: T_RoomId
-    dummyId: T_DummyId
-    field: E_Field
-  }
-  [E_Emit.removeDummyOnFieldInBattlefieldWindow]: {
+  [E_Emit.removeDummyOnBattlefield]: {
     roomId: T_RoomId
     dummySubId: string
-    field: E_Field
+    battlefield: E_Battlefield
+  }
+  [E_Emit.removeDummiesOnBattlefield]: {
+    roomId: T_RoomId
+    dummyId: T_DummyId
+    battlefield: E_Battlefield
   }
 }
