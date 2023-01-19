@@ -1,4 +1,4 @@
-export enum E_Field {
+export enum E_Battlefield {
   master = 'master',
   players = 'players',
 }
