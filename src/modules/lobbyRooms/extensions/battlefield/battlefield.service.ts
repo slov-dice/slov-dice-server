@@ -27,7 +27,6 @@ import { I_Character } from 'models/shared/game/character'
 export class BattlefieldService {
   constructor(private lobbyRooms: LobbyRoomsService) {}
 
-  // Создание экземпляра болванки
   createDummy({ roomId, dummy, battlefield }: I_CreateDummy): T_BaseDummy {
     const room = this.lobbyRooms.findRoomById(roomId)
     if (battlefield === 'master') {
@@ -39,7 +38,6 @@ export class BattlefieldService {
     return dummy
   }
 
-  // Добавление болванки на поле боя
   addDummyToBattlefield({
     roomId,
     dummy,
@@ -61,7 +59,6 @@ export class BattlefieldService {
     }
   }
 
-  // Выполнение действия между карточками болванок или игроков
   makeAction({ roomId, action, actionTarget }: I_MakeAction): {
     characters: I_Character[]
     masterField: T_Dummy[]
@@ -119,7 +116,6 @@ export class BattlefieldService {
     }
   }
 
-  // Быстрое изменение поля конкретного экземпляра болванки
   updateDummyField({
     roomId,
     dummyId,
@@ -146,7 +142,6 @@ export class BattlefieldService {
     return baseDummy
   }
 
-  // Обновление экземпляра болванки
   updateDummy({ roomId, dummy, battlefield }: I_UpdateDummy): T_BaseDummy {
     const room = this.lobbyRooms.findRoomById(roomId)
     room.game.battlefield.window[
@@ -158,7 +153,6 @@ export class BattlefieldService {
     return dummy
   }
 
-  // Быстрое изменение поля конкретной болванки
   updateDummyFieldOnBattlefield({
     roomId,
     battlefield,
@@ -183,7 +177,6 @@ export class BattlefieldService {
     ]
   }
 
-  // Удаление экземпляра болванки и болванок с поля боя
   removeDummy({ roomId, dummyId, battlefield }: I_RemoveDummy) {
     const room = this.lobbyRooms.findRoomById(roomId)
     room.game.battlefield.window[
@@ -201,7 +194,6 @@ export class BattlefieldService {
     return dummyId
   }
 
-  // Удаление болванки с поля боя
   removeDummyOnBattlefield({
     roomId,
     dummySubId,
@@ -220,7 +212,6 @@ export class BattlefieldService {
     ]
   }
 
-  // Удаление всех болванок по экземпляру с поля боя
   removeDummiesOnBattlefield({
     roomId,
     dummyId,

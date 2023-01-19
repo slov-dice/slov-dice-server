@@ -27,14 +27,15 @@ export enum E_Subscribe {
   getRoomChat = 'getRoomChat',
   getRoomMessage = 'getRoomMessage',
 
-  // Characters Window
-  getCharactersWindowSettingsBars = 'getCharactersWindowSettingsBars',
-  getCharactersWindowSettingsSpecials = 'getCharactersWindowSettingsSpecials',
-  getCharactersWindowSettingsEffects = 'getCharactersWindowSettingsEffects',
+  getSettingsBars = 'getSettingsBars',
 
-  getCreatedCharacterInCharactersWindow = 'getCreatedCharacterInCharactersWindow',
-  getUpdatedCharacterInCharactersWindow = 'getUpdatedCharacterInCharactersWindow',
-  getRemovedCharacterInCharactersWindow = 'getRemovedCharacterInCharactersWindow',
+  // Characters Window
+  getCharactersSettingsSpecials = 'getCharactersSettingsSpecials',
+  getCharactersSettingsEffects = 'getCharactersSettingsEffects',
+
+  getCreatedCharacter = 'getCreatedCharacter',
+  getUpdatedCharacter = 'getUpdatedCharacter',
+  getRemovedCharacter = 'getRemovedCharacter',
 
   // Battlefield Window
   getCreatedDummy = 'getCreatedDummy',
@@ -59,7 +60,7 @@ export interface I_SubscriptionData {
   [E_Subscribe.getRoomMessage]: { message: I_RoomMessage }
 
   // Characters Window
-  [E_Subscribe.getCharactersWindowSettingsBars]: {
+  [E_Subscribe.getSettingsBars]: {
     message: T_LocaleText
     status: E_StatusServerMessage
     bars: T_BaseCharacterBar[]
@@ -67,27 +68,27 @@ export interface I_SubscriptionData {
     playersDummies: T_BaseDummy[]
     masterDummies: T_BaseDummy[]
   }
-  [E_Subscribe.getCharactersWindowSettingsSpecials]: {
+  [E_Subscribe.getCharactersSettingsSpecials]: {
     message: T_LocaleText
     status: E_StatusServerMessage
     specials: T_BaseCharacterSpecial[]
     characters: I_Character[]
   }
-  [E_Subscribe.getCharactersWindowSettingsEffects]: {
+  [E_Subscribe.getCharactersSettingsEffects]: {
     message: T_LocaleText
     status: E_StatusServerMessage
     effects: T_BaseCharacterEffect[]
     characters: I_Character[]
   }
-  [E_Subscribe.getCreatedCharacterInCharactersWindow]: {
+  [E_Subscribe.getCreatedCharacter]: {
     message: T_LocaleText
     status: E_StatusServerMessage
     character: I_Character
   }
-  [E_Subscribe.getUpdatedCharacterInCharactersWindow]: {
+  [E_Subscribe.getUpdatedCharacter]: {
     character: I_Character
   }
-  [E_Subscribe.getRemovedCharacterInCharactersWindow]: {
+  [E_Subscribe.getRemovedCharacter]: {
     characterId: T_CharacterId
   }
 
@@ -126,15 +127,17 @@ export enum E_Emit {
   requestRoomMessages = 'requestRoomMessages',
   sendMessageRoom = 'sendMessageRoom',
 
-  // Characters Window
-  updateCharactersWindowSettingsBars = 'updateCharactersWindowSettingsBars',
-  updateCharactersWindowSettingsSpecials = 'updateCharactersWindowSettingsSpecials',
-  updateCharactersWindowSettingsEffects = 'updateCharactersWindowSettingsEffects',
+  // Global settings
+  updateSettingsBars = 'updateSettingsBars',
 
-  createCharacterInCharactersWindow = 'createCharacterInCharactersWindow',
-  updateCharacterInCharactersWindow = 'updateCharacterInCharactersWindow',
-  updateCharacterFieldInCharactersWindow = 'updateCharacterFieldInCharactersWindow',
-  removeCharacterInCharactersWindow = 'removeCharacterInCharactersWindow',
+  // Characters Window
+  updateCharactersSettingsSpecials = 'updateCharactersSettingsSpecials',
+  updateCharactersSettingsEffects = 'updateCharactersSettingsEffects',
+
+  createCharacter = 'createCharacter',
+  updateCharacter = 'updateCharacter',
+  updateCharacterField = 'updateCharacterField',
+  removeCharacter = 'removeCharacter',
 
   // Battlefield Window
   createDummy = 'createDummy',
@@ -174,35 +177,36 @@ export interface I_EmitPayload {
     text: string
   }
 
-  // Characters Window
-  [E_Emit.updateCharactersWindowSettingsBars]: {
+  [E_Emit.updateSettingsBars]: {
     roomId: T_RoomId
     bars: T_BaseCharacterBar[]
   }
-  [E_Emit.updateCharactersWindowSettingsSpecials]: {
+
+  // Characters Window
+  [E_Emit.updateCharactersSettingsSpecials]: {
     roomId: T_RoomId
     specials: T_BaseCharacterSpecial[]
   }
-  [E_Emit.updateCharactersWindowSettingsEffects]: {
+  [E_Emit.updateCharactersSettingsEffects]: {
     roomId: T_RoomId
     effects: T_BaseCharacterEffect[]
   }
-  [E_Emit.createCharacterInCharactersWindow]: {
+  [E_Emit.createCharacter]: {
     roomId: T_RoomId
     character: I_Character
   }
-  [E_Emit.updateCharacterInCharactersWindow]: {
+  [E_Emit.updateCharacter]: {
     roomId: T_RoomId
     character: I_Character
   }
-  [E_Emit.updateCharacterFieldInCharactersWindow]: {
+  [E_Emit.updateCharacterField]: {
     roomId: T_RoomId
     characterId: string
     field: string
     subFieldId?: string
     value: string | number
   }
-  [E_Emit.removeCharacterInCharactersWindow]: {
+  [E_Emit.removeCharacter]: {
     roomId: T_RoomId
     characterId: string
   }

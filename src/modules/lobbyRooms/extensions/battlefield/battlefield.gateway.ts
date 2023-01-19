@@ -44,6 +44,7 @@ export class BattlefieldGateway
     this.logger.log(`Client disconnected: ${client.id}`)
   }
 
+  // Создание экземпляра болванки
   @SubscribeMessage(E_Emit.createDummy)
   createDummy(
     _: Socket,
@@ -63,6 +64,7 @@ export class BattlefieldGateway
     this.server.to(roomId).emit(E_Subscribe.getCreatedDummy, response)
   }
 
+  // Добавление болванки на поле боя
   @SubscribeMessage(E_Emit.addDummyToBattlefield)
   addDummyToBattlefield(
     _: Socket,
@@ -82,6 +84,7 @@ export class BattlefieldGateway
     this.server.to(roomId).emit(E_Subscribe.getDummiesOnBattlefield, response)
   }
 
+  // Выполнение действия между карточками болванок или игроков
   @SubscribeMessage(E_Emit.makeActionInBattlefield)
   makeActionInBattlefield(
     _: Socket,
@@ -109,6 +112,7 @@ export class BattlefieldGateway
       .emit(E_Subscribe.getInitiationActionOnBattlefield, response)
   }
 
+  // Быстрое изменение поля конкретного экземпляра болванки
   @SubscribeMessage(E_Emit.updateDummyField)
   updateDummyField(
     _: Socket,
@@ -138,6 +142,7 @@ export class BattlefieldGateway
     this.server.to(roomId).emit(E_Subscribe.getUpdatedDummy, response)
   }
 
+  // Обновление экземпляра болванки
   @SubscribeMessage(E_Emit.updateDummy)
   updateDummy(
     client: Socket,
@@ -157,9 +162,10 @@ export class BattlefieldGateway
     this.server.to(roomId).emit(E_Subscribe.getUpdatedDummy, response)
   }
 
+  // Быстрое изменение поля конкретной болванки
   @SubscribeMessage(E_Emit.updateDummyFieldOnBattlefield)
   updateDummyFieldOnBattlefield(
-    client: Socket,
+    _: Socket,
     {
       battlefield,
       dummySubId,
@@ -185,9 +191,10 @@ export class BattlefieldGateway
     this.server.to(roomId).emit(E_Subscribe.getDummiesOnBattlefield, response)
   }
 
+  // Удаление болванки с поля боя
   @SubscribeMessage(E_Emit.removeDummy)
   removeDummy(
-    client: Socket,
+    _: Socket,
     { battlefield, dummyId, roomId }: I_EmitPayload[E_Emit.removeDummy],
   ) {
     const roomDummyId = this.battlefieldService.removeDummy({
@@ -204,9 +211,10 @@ export class BattlefieldGateway
     this.server.to(roomId).emit(E_Subscribe.getRemovedDummy, response)
   }
 
+  // Удаление экземпляра болванки и болванок с поля боя
   @SubscribeMessage(E_Emit.removeDummyOnBattlefield)
   removeDummyOnBattlefield(
-    client: Socket,
+    _: Socket,
     {
       battlefield,
       dummySubId,
@@ -227,9 +235,10 @@ export class BattlefieldGateway
     this.server.to(roomId).emit(E_Subscribe.getDummiesOnBattlefield, response)
   }
 
+  // Удаление всех болванок по экземпляру с поля боя
   @SubscribeMessage(E_Emit.removeDummiesOnBattlefield)
   removeDummiesOnBattlefield(
-    client: Socket,
+    _: Socket,
     {
       battlefield,
       dummyId,
