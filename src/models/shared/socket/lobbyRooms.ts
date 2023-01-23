@@ -247,7 +247,7 @@ export interface I_EmitPayload {
     field: string
     battlefield: E_Battlefield
     subFieldId?: string
-    value: string
+    value: number
   }
   [E_Emit.removeDummy]: {
     roomId: T_RoomId
