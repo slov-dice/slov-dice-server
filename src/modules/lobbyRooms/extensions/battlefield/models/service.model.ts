@@ -41,7 +41,7 @@ export interface I_UpdateDummyFieldOnBattlefield {
   battlefield: E_Battlefield
   field: string
   dummySubId: string
-  value: string
+  value: number
   subFieldId: string
 }
 
