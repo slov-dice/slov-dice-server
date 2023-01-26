@@ -1,12 +1,8 @@
 import {
   SubscribeMessage,
   WebSocketGateway,
-  OnGatewayInit,
   WebSocketServer,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
 } from '@nestjs/websockets'
-import { Logger } from '@nestjs/common'
 import { Socket, Server } from 'socket.io'
 
 import { ChatService } from './chat.service'
@@ -19,30 +15,11 @@ import {
 } from 'models/shared/socket/lobbyRooms'
 
 @WebSocketGateway({ cors: true })
-export class ChatGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
-{
+export class ChatGateway {
   @WebSocketServer()
   server: Server
 
-  private logger: Logger = new Logger('ChatGateway')
-
   constructor(private chatService: ChatService) {}
-
-  // Инициализация приложения
-  async afterInit() {
-    this.logger.log('Init ChatGateway')
-  }
-
-  // Подключение сокета
-  handleConnection(client: Socket) {
-    this.logger.log(`Client connected ChatGateway: ${client.id}`)
-  }
-
-  // Отключение сокета
-  handleDisconnect(client: Socket) {
-    this.logger.log(`Client disconnected: ${client.id}`)
-  }
 
   // Создание сообщений в чате комнаты
   @SubscribeMessage(E_Emit.sendMessageRoom)

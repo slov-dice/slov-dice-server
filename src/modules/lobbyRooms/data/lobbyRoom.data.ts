@@ -65,4 +65,9 @@ export const lobbyRoomGameInstance = (): I_FullRoomGame => ({
       playersField: [],
     },
   },
+  textEditor: {
+    window: {
+      docs: [],
+    },
+  },
 })

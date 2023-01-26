@@ -1,12 +1,8 @@
 import {
   SubscribeMessage,
   WebSocketGateway,
-  OnGatewayInit,
   WebSocketServer,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
 } from '@nestjs/websockets'
-import { Logger } from '@nestjs/common'
 import { Socket, Server } from 'socket.io'
 
 import { BattlefieldService } from './battlefield.service'
@@ -19,30 +15,11 @@ import {
 } from 'models/shared/socket/lobbyRooms'
 
 @WebSocketGateway({ cors: true })
-export class BattlefieldGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
-{
+export class BattlefieldGateway {
   @WebSocketServer()
   server: Server
 
-  private logger: Logger = new Logger('BattlefieldGateway')
-
   constructor(private battlefieldService: BattlefieldService) {}
-
-  // Инициализация приложения
-  async afterInit() {
-    this.logger.log('Init BattlefieldGateway')
-  }
-
-  // Подключение сокета
-  handleConnection(client: Socket) {
-    this.logger.log(`Client connected BattlefieldGateway: ${client.id}`)
-  }
-
-  // Отключение сокета
-  handleDisconnect(client: Socket) {
-    this.logger.log(`Client disconnected: ${client.id}`)
-  }
 
   // Создание экземпляра болванки
   @SubscribeMessage(E_Emit.createDummy)
