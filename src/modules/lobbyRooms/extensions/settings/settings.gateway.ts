@@ -1,12 +1,8 @@
 import {
   SubscribeMessage,
   WebSocketGateway,
-  OnGatewayInit,
   WebSocketServer,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
 } from '@nestjs/websockets'
-import { Logger } from '@nestjs/common'
 import { Socket, Server } from 'socket.io'
 
 import { SettingsService } from './settings.service'
@@ -21,30 +17,11 @@ import {
 import { t } from 'languages'
 
 @WebSocketGateway({ cors: true })
-export class SettingsGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
-{
+export class SettingsGateway {
   @WebSocketServer()
   server: Server
 
-  private logger: Logger = new Logger('SettingsGateway')
-
   constructor(private settingsService: SettingsService) {}
-
-  // Инициализация приложения
-  async afterInit() {
-    this.logger.log('Init SettingsGateway')
-  }
-
-  // Подключение сокета
-  handleConnection(client: Socket) {
-    this.logger.log(`Client connected SettingsGateway: ${client.id}`)
-  }
-
-  // Отключение сокета
-  handleDisconnect(client: Socket) {
-    this.logger.log(`Client disconnected: ${client.id}`)
-  }
 
   // Изменение баров персонажей и болванок
   @SubscribeMessage(E_Emit.updateSettingsBars)

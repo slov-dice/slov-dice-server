@@ -11,6 +11,8 @@ import { ChatService } from './extensions/chat/chat.service'
 import { CommandsService } from './extensions/chat/commands.service'
 import { SettingsGateway } from './extensions/settings/settings.gateway'
 import { SettingsService } from './extensions/settings/settings.service'
+import { TextEditorGateway } from './extensions/textEditor/textEditor.gateway'
+import { TextEditorService } from './extensions/textEditor/textEditor.service'
 
 import { LobbyUsersModule } from 'modules/lobbyUsers/lobbyUsers.module'
 
@@ -28,6 +30,8 @@ import { LobbyUsersModule } from 'modules/lobbyUsers/lobbyUsers.module'
     CommandsService,
     SettingsGateway,
     SettingsService,
+    TextEditorGateway,
+    TextEditorService,
   ],
   exports: [LobbyRoomsService],
 })

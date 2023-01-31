@@ -1,5 +1,6 @@
 import { I_Character, I_CharactersSettings } from './game/character'
 import { T_BaseDummy, T_Dummy } from './game/dummy'
+import { I_Doc } from './game/textEditor'
 
 export type T_SocketId = string
 export type T_UserId = number
@@ -125,6 +126,11 @@ export type I_FullRoomGame = {
       playersField: T_Dummy[]
       masterDummies: T_BaseDummy[]
       playersDummies: T_BaseDummy[]
+    }
+  }
+  textEditor: {
+    window: {
+      docs: I_Doc[]
     }
   }
 }

@@ -18,6 +18,7 @@ import {
   T_CharacterId,
 } from 'models/shared/game/character'
 import { T_BaseDummy, T_Dummy, T_DummyId } from 'models/shared/game/dummy'
+import { I_Doc, T_DocId } from 'models/shared/game/textEditor'
 
 export enum E_Subscribe {
   getPreviewRooms = 'getPreviewRooms',
@@ -43,6 +44,11 @@ export enum E_Subscribe {
   getInitiationActionOnBattlefield = 'getInitiationActionOnBattlefield',
   getUpdatedDummy = 'getUpdatedDummy',
   getRemovedDummy = 'getRemovedDummy',
+
+  // TextEditor Window
+  getCreatedDoc = 'getCreatedDoc',
+  getRemovedDoc = 'getRemovedDoc',
+  getUpdatedDoc = 'getUpdatedDoc',
 }
 
 export interface I_SubscriptionData {
@@ -116,6 +122,16 @@ export interface I_SubscriptionData {
     dummyId: T_DummyId
     battlefield: E_Battlefield
   }
+
+  [E_Subscribe.getCreatedDoc]: {
+    doc: I_Doc
+  }
+  [E_Subscribe.getRemovedDoc]: {
+    docId: T_DocId
+  }
+  [E_Subscribe.getUpdatedDoc]: {
+    doc: I_Doc
+  }
 }
 
 export enum E_Emit {
@@ -149,6 +165,11 @@ export enum E_Emit {
   removeDummy = 'removeDummy',
   removeDummyOnBattlefield = 'removeDummyOnBattlefield',
   removeDummiesOnBattlefield = 'removeDummiesOnBattlefield',
+
+  // TextEditor Window
+  createDoc = 'createDoc',
+  removeDoc = 'removeDoc',
+  updateDoc = 'updateDoc',
 }
 
 export interface I_EmitPayload {
@@ -263,5 +284,20 @@ export interface I_EmitPayload {
     roomId: T_RoomId
     dummyId: T_DummyId
     battlefield: E_Battlefield
+  }
+  [E_Emit.createDoc]: {
+    roomId: T_RoomId
+    title: string
+    description: string
+  }
+  [E_Emit.removeDoc]: {
+    roomId: T_RoomId
+    docId: T_DocId
+  }
+  [E_Emit.updateDoc]: {
+    roomId: T_RoomId
+    docId: T_DocId
+    field: string
+    value: string
   }
 }
