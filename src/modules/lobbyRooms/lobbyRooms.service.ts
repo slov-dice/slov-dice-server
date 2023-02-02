@@ -19,6 +19,7 @@ import {
   I_SubscriptionData,
 } from 'models/shared/socket/lobbyRooms'
 import { t } from 'languages'
+import { T_GameSave } from 'models/shared/game/save'
 
 @Injectable()
 export class LobbyRoomsService {
@@ -117,6 +118,14 @@ export class LobbyRoomsService {
     const previewRoom = this.fullToPreviewRoom(fullRoom)
 
     return { fullRoom, previewRoom }
+  }
+
+  loadGame(save: T_GameSave, roomId: string) {
+    const room = this.findRoomById(roomId)
+    room.messages = save.messages
+    room.game = save.game
+
+    return { roomGame: room.game, roomMessages: room.messages }
   }
 
   removeUser(socketId: T_SocketId, roomId: T_RoomId): I_FullRoom {

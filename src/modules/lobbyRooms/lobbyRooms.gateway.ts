@@ -155,4 +155,21 @@ export class LobbyRoomsGateway
     // Отправляем всем обновлённого пользователя
     this.server.emit(E_LUSubscribe.getLobbyUser, { user })
   }
+
+  // Загрузка игры
+  @SubscribeMessage(E_Emit.loadGame)
+  loadGame(_: Socket, { roomId, save }: I_EmitPayload[E_Emit.loadGame]) {
+    const { roomGame, roomMessages } = this.lobbyRooms.loadGame(save, roomId)
+
+    const response: I_SubscriptionData[E_Subscribe.getSavedGame] = {
+      save: {
+        game: roomGame,
+        messages: roomMessages,
+      },
+      message: t('room.success.loadGame'),
+      status: E_StatusServerMessage.success,
+    }
+
+    this.server.to(roomId).emit(E_Subscribe.getSavedGame, response)
+  }
 }

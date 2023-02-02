@@ -37,7 +37,8 @@
         "character": {
           "created": "New character created"
         }
-      }
+      },
+      "loadGame": "The download of the game was successful"
     },
     "info": {
       "userJoin": "New user join to party!",
