@@ -1,4 +1,5 @@
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator'
+import { IsEmail, IsEnum, IsNotEmpty, IsString } from 'class-validator'
+import { E_Locale } from 'models/shared/app'
 
 export class SignUpDto {
   @IsEmail()
@@ -12,4 +13,8 @@ export class SignUpDto {
   @IsString()
   @IsNotEmpty()
   password: string
+
+  @IsString()
+  @IsNotEmpty()
+  language: E_Locale
 }
