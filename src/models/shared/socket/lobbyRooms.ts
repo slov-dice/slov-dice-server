@@ -18,6 +18,7 @@ import {
   T_CharacterId,
 } from 'models/shared/game/character'
 import { T_BaseDummy, T_Dummy, T_DummyId } from 'models/shared/game/dummy'
+import { T_GameSave } from 'models/shared/game/save'
 import { I_Doc, T_DocId } from 'models/shared/game/textEditor'
 
 export enum E_Subscribe {
@@ -27,6 +28,7 @@ export enum E_Subscribe {
   getFullRoomRejoin = 'getFullRoomRejoin',
   getRoomChat = 'getRoomChat',
   getRoomMessage = 'getRoomMessage',
+  getSavedGame = 'getSavedGame',
 
   getSettingsBars = 'getSettingsBars',
 
@@ -64,6 +66,11 @@ export interface I_SubscriptionData {
   }
   [E_Subscribe.getRoomChat]: { messages: I_RoomMessage[] }
   [E_Subscribe.getRoomMessage]: { message: I_RoomMessage }
+  [E_Subscribe.getSavedGame]: {
+    save: T_GameSave
+    status: E_StatusServerMessage
+    message: T_LocaleText
+  }
 
   // Characters Window
   [E_Subscribe.getSettingsBars]: {
@@ -142,6 +149,7 @@ export enum E_Emit {
   leaveRoom = 'leaveRoom',
   requestRoomMessages = 'requestRoomMessages',
   sendMessageRoom = 'sendMessageRoom',
+  loadGame = 'loadGame',
 
   // Global settings
   updateSettingsBars = 'updateSettingsBars',
@@ -201,6 +209,10 @@ export interface I_EmitPayload {
   [E_Emit.updateSettingsBars]: {
     roomId: T_RoomId
     bars: T_BaseCharacterBar[]
+  }
+  [E_Emit.loadGame]: {
+    roomId: T_RoomId
+    save: T_GameSave
   }
 
   // Characters Window
