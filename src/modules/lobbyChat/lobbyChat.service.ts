@@ -5,9 +5,7 @@ import { I_LobbyMessage, I_LobbyUser } from 'models/shared/app'
 
 @Injectable()
 export class LobbyChatService {
-  messages: I_LobbyMessage[] = [
-    { author: 'test', authorId: 111, id: '123', text: 'test' },
-  ]
+  messages: I_LobbyMessage[] = []
 
   getAllMessages(): I_LobbyMessage[] {
     return this.messages
