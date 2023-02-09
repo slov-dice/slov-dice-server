@@ -59,7 +59,8 @@ export class AuthService {
       user.id,
       user.email,
     )
-    await this.mailService.sendUserConfirmation(user, verifyToken)
+    // Отправка письма подтверждения
+    await this.mailService.sendUserConfirmation(user, verifyToken, dto.language)
 
     return {
       accessToken: tokens.accessToken,
