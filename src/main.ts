@@ -5,7 +5,7 @@ import * as cookieParser from 'cookie-parser'
 import { AppModule } from './app.module'
 
 async function bootstrap() {
-  const whitelist = ['http://127.0.0.1:5173', 'http://localhost:5173']
+  const whitelist = ['http://127.0.0.1:5173', 'http://localhost:5173', 'https://slov-dice.com']
 
   const app = await NestFactory.create(AppModule, {
     cors: {
