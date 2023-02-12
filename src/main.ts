@@ -21,6 +21,6 @@ async function bootstrap() {
   })
   app.use(cookieParser())
   app.useGlobalPipes(new ValidationPipe())
-  await app.listen('127.0.0.1:8000')
+  await app.listen(8000)
 }
 bootstrap()
