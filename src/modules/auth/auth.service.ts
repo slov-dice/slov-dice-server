@@ -119,8 +119,6 @@ export class AuthService {
       },
     }
 
-    console.log('---params---', params)
-
     return await lastValueFrom(
       this.httpService.post(url, new URLSearchParams(params), config),
     )
@@ -139,8 +137,6 @@ export class AuthService {
       },
     }
 
-    console.log('---config---', config)
-
     return await lastValueFrom(this.httpService.get(url, config))
   }
 
@@ -150,6 +146,8 @@ export class AuthService {
     data: T_ThirdPartyUserData,
   ): Promise<T_AuthResponse> {
     const user = await this.usersService.findUnique('email', data.email)
+
+    console.log('---user---', user)
 
     // Аутентификация
     if (user) {
