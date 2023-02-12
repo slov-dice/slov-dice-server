@@ -11,9 +11,11 @@ import { LobbyChatModule } from 'modules/lobbyChat/lobbyChat.module'
 import { LobbyUsersModule } from 'modules/lobbyUsers/lobbyUsers.module'
 import { LobbyRoomsModule } from './modules/lobbyRooms/lobbyRooms.module'
 
+console.log('env', process.env.NODE_ENV)
+
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: `.env.${process.env.NODE_ENV}` }),
     ThrottlerModule.forRoot({
       ttl: 60,
       limit: 20,
