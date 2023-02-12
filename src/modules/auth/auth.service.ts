@@ -119,6 +119,8 @@ export class AuthService {
       },
     }
 
+    console.log('---params---', params)
+
     return await lastValueFrom(
       this.httpService.post(url, new URLSearchParams(params), config),
     )
@@ -136,6 +138,8 @@ export class AuthService {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
     }
+
+    console.log('---config---', config)
 
     return await lastValueFrom(this.httpService.get(url, config))
   }
