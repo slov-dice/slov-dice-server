@@ -147,7 +147,6 @@ export class AuthService {
   ): Promise<T_AuthResponse> {
     const user = await this.usersService.findUnique('email', data.email)
 
-    console.log('---user---', user)
 
     // Аутентификация
     if (user) {
@@ -155,6 +154,7 @@ export class AuthService {
         throw new ForbiddenException(t('auth.error.mailRegistered'))
 
       const tokens = await this.tokenService.generateTokens(user.id, user.email)
+      console.log('---tokens---', tokens)
       return {
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
