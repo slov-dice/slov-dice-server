@@ -44,7 +44,7 @@ export class AuthController {
 
   // Первоначальная проверка авторизации
   @UseGuards(AtGuard)
-  @Post('check')
+  @Get('check')
   @HttpCode(HttpStatus.OK)
   checkAuth(@GetUserId() userId: T_UserId): Promise<T_AuthResponse> {
     return this.authService.check(userId)
