@@ -4,18 +4,16 @@ import { ScheduleModule } from '@nestjs/schedule'
 import { ConfigModule } from '@nestjs/config'
 import { Module } from '@nestjs/common'
 
+import { LobbyRoomsModule } from './modules/lobbyRooms/lobbyRooms.module'
+
 import { AuthModule } from 'modules/auth/auth.module'
 import { PrismaModule } from 'modules/prisma/prisma.module'
 import { TasksModule } from 'modules/tasks/tasks.module'
 import { LobbyChatModule } from 'modules/lobbyChat/lobbyChat.module'
 import { LobbyUsersModule } from 'modules/lobbyUsers/lobbyUsers.module'
-import { LobbyRoomsModule } from './modules/lobbyRooms/lobbyRooms.module'
-
-console.log('env', process.env.NODE_ENV)
-
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, envFilePath: `.env.${process.env.NODE_ENV}` }),
+    ConfigModule.forRoot({ isGlobal: true }),
     ThrottlerModule.forRoot({
       ttl: 60,
       limit: 20,
