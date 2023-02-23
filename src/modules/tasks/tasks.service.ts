@@ -12,7 +12,7 @@ export class TasksService {
 
   private readonly logger = new Logger(TasksService.name)
 
-  @Interval(hourInMilliseconds)
+  @Interval(weekInMilliseconds)
   async handleInterval() {
     // TODO: Удалять гостя из LobbyUsers
     const users = await this.usersService.removeOldGuests()
