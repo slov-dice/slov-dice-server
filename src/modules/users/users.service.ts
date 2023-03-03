@@ -76,16 +76,20 @@ export class UsersService {
   // Удаление старых пользователей типа "Гость",
   // если от даты создания прошла неделя
   async removeOldGuests() {
-    return await this.prisma.user.deleteMany({
+    const oldGuests = {
       where: {
         AND: [
           {
             from: E_AuthType.guest,
-            created_at: { lt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7) },
+            created_at: { lt: new Date(Date.now() - 1000 * 60) },
           },
         ],
       },
-    })
+    }
+    const removedUsers = await this.prisma.user.findMany(oldGuests)
+    await this.prisma.user.deleteMany(oldGuests)
+
+    return removedUsers.map((user) => user.id)
   }
 
   generateNicknameByEmail(email: string): string {

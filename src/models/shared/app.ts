@@ -111,6 +111,8 @@ export interface I_PreviewRoom {
   currentSize: number
   type: E_RoomType
   users: I_RoomUser[]
+  updatedAt: Date
+  createdAt: Date
 }
 
 export type I_FullRoomGame = {

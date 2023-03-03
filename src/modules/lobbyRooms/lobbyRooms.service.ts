@@ -20,6 +20,7 @@ import {
 } from 'models/shared/socket/lobbyRooms'
 import { t } from 'languages'
 import { T_GameSave } from 'models/shared/game/save'
+import { Cron, CronExpression } from '@nestjs/schedule'
 
 @Injectable()
 export class LobbyRoomsService {
@@ -45,6 +46,8 @@ export class LobbyRoomsService {
     const user = this.lobbyUsers.findBySocketId(socketId)
     const roomId = v4()
 
+    const createdAt = new Date()
+
     const room: I_FullRoom = {
       id: roomId,
       authorId: user.id,
@@ -56,6 +59,8 @@ export class LobbyRoomsService {
       users: [{ userId: user.id, socketId: user.socketId }],
       messages: [],
       game: lobbyRoomGameInstance(),
+      createdAt,
+      updatedAt: createdAt,
     }
 
     const updatedUser = this.lobbyUsers.setInRoomBySocketId(socketId)
@@ -158,6 +163,16 @@ export class LobbyRoomsService {
   }
 
   findRoomById(roomId: T_RoomId): I_FullRoom {
-    return this.rooms.find((room) => room.id === roomId)
+    const room = this.rooms.find((room) => room.id === roomId)
+    room.updatedAt = new Date()
+    return room
+  }
+
+  @Cron(CronExpression.EVERY_12_HOURS)
+  async handleCron() {
+    const now = new Date()
+    this.rooms = this.rooms.filter(
+      (room) => now.valueOf() - room.updatedAt.valueOf() < 1000 * 60 * 60 * 12,
+    )
   }
 }

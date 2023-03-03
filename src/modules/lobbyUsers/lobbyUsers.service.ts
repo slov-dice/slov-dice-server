@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common'
+import { Cron, CronExpression } from '@nestjs/schedule'
 import { User } from '@prisma/client'
 
 import {
@@ -27,7 +28,6 @@ export class LobbyUsersService {
         status: E_UserStatus.offline,
       }),
     )
-
     console.log('users init', this.users)
   }
 
@@ -119,5 +119,16 @@ export class LobbyUsersService {
 
   findByUserId(userId: T_UserId): I_LobbyUser {
     return this.users.find((user) => user.id === userId)
+  }
+
+  removeOldGuests(usersIds: T_UserId[]) {
+    this.users = this.users.filter((user) => !usersIds.includes(user.id))
+  }
+
+  // Удаление гостей из бд и из списка
+  @Cron(CronExpression.EVERY_WEEK)
+  async handleCron() {
+    const removedUsersIds = await this.usersService.removeOldGuests()
+    this.removeOldGuests(removedUsersIds)
   }
 }

@@ -8,7 +8,6 @@ import { LobbyRoomsModule } from './modules/lobbyRooms/lobbyRooms.module'
 
 import { AuthModule } from 'modules/auth/auth.module'
 import { PrismaModule } from 'modules/prisma/prisma.module'
-import { TasksModule } from 'modules/tasks/tasks.module'
 import { LobbyChatModule } from 'modules/lobbyChat/lobbyChat.module'
 import { LobbyUsersModule } from 'modules/lobbyUsers/lobbyUsers.module'
 @Module({
@@ -19,7 +18,6 @@ import { LobbyUsersModule } from 'modules/lobbyUsers/lobbyUsers.module'
       limit: 20,
     }),
     ScheduleModule.forRoot(),
-    TasksModule,
     AuthModule,
     PrismaModule,
     LobbyChatModule,
