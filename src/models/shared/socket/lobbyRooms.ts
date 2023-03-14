@@ -257,6 +257,7 @@ export interface I_EmitPayload {
   }
   [E_Emit.makeActionInBattlefield]: {
     roomId: T_RoomId
+    userId: T_UserId
     actionTarget: T_DummyId | T_CharacterId
     actionInitiator: T_DummyId | T_CharacterId
     action: T_CharacterAction

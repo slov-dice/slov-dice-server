@@ -1,4 +1,4 @@
-import { T_RoomId } from 'models/shared/app'
+import { T_RoomId, T_UserId } from 'models/shared/app'
 import { E_Battlefield } from 'models/shared/game/battlefield'
 import { T_CharacterAction, T_CharacterId } from 'models/shared/game/character'
 import { T_BaseDummy, T_DummyId } from 'models/shared/game/dummy'
@@ -19,6 +19,8 @@ export interface I_MakeAction {
   roomId: T_RoomId
   action: T_CharacterAction
   actionTarget: T_DummyId | T_CharacterId
+  actionInitiator: T_DummyId | T_CharacterId
+  userId: T_UserId
 }
 
 export interface I_UpdateDummyField {

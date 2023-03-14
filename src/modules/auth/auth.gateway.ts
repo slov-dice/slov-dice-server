@@ -24,7 +24,6 @@ import {
   I_SubscriptionData,
 } from 'models/shared/socket/restore'
 import { t } from 'languages'
-import { WsThrottlerGuard } from 'guards/wsThrottler.guard'
 
 @WebSocketGateway({ cors: true })
 export class AuthGateway
@@ -61,7 +60,6 @@ export class AuthGateway
   }
 
   // Проверка почты и отправка кода для восстановления пароля
-  @UseGuards(WsThrottlerGuard)
   @SubscribeMessage(E_Emit.restoreCheckEmail)
   async restoreCheckEmail(
     client: Socket,

@@ -6,12 +6,11 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
 } from '@nestjs/websockets'
-import { Logger, UseGuards } from '@nestjs/common'
+import { Logger } from '@nestjs/common'
 import { Socket, Server } from 'socket.io'
 
 import { LobbyChatService } from './lobbyChat.service'
 
-import { WsThrottlerGuard } from 'guards/wsThrottler.guard'
 import { LobbyUsersService } from 'modules/lobbyUsers/lobbyUsers.service'
 import {
   E_Emit,
@@ -50,7 +49,6 @@ export class LobbyChatGateway
   }
 
   // Получение всех сообщений
-  // @UseGuards(WsGuard)
   @SubscribeMessage(E_Emit.requestLobbyMessages)
   getAllMessages(client: Socket) {
     const messages = this.lobbyChat.getAllMessages()
@@ -64,7 +62,6 @@ export class LobbyChatGateway
   }
 
   // Отправка сообщения в лобби
-  @UseGuards(WsThrottlerGuard)
   @SubscribeMessage(E_Emit.sendLobbyMessage)
   sendMessageLobby(
     client: Socket,

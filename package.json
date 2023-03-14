@@ -36,7 +36,6 @@
     "@nestjs/platform-express": "^8.0.0",
     "@nestjs/platform-socket.io": "^8.1.2",
     "@nestjs/schedule": "^1.0.2",
-    "@nestjs/throttler": "^2.0.0",
     "@nestjs/websockets": "^8.1.2",
     "@prisma/client": "^4.2.1",
     "argon2": "^0.28.3",

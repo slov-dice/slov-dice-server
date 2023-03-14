@@ -70,10 +70,17 @@ export class BattlefieldGateway {
       actionInitiator,
       actionTarget,
       roomId,
+      userId,
     }: I_EmitPayload[E_Emit.makeActionInBattlefield],
   ) {
     const { characters, masterField, playersField } =
-      this.battlefieldService.makeAction({ action, actionTarget, roomId })
+      this.battlefieldService.makeAction({
+        action,
+        actionTarget,
+        actionInitiator,
+        roomId,
+        userId,
+      })
 
     const response: I_SubscriptionData[E_Subscribe.getInitiationActionOnBattlefield] =
       {
