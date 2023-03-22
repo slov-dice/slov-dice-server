@@ -147,7 +147,6 @@ export class AuthService {
   ): Promise<T_AuthResponse> {
     const user = await this.usersService.findUnique('email', data.email)
 
-
     // Аутентификация
     if (user) {
       if (user.from !== authType)
